@@ -11,8 +11,8 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **add Sour Apple** [source](https://github.com/ckcr4lyf/EvilAppleJuice-ESP32/blob/master/src/EvilAppleJuice-ESP32-INO/EvilAppleJuice-ESP32-INO.ino)
 - **Fix Some Problems**
 - **Changed UI**
-- **Imporved Becaon Attack Funtcions**
-- **Imporved Deauth Attack Funtcions**
+- **Imporved Becaon Attack Functions**
+- **Imporved Deauth Attack Functions**
 ---
 ---
 ## Firmware Upload Guide
@@ -58,4 +58,8 @@ I am **not** responsible for any consequences arising from the use of this tool,
 |------|----------------|-----------|
 | SDA  | GPIO 21        | PA26      |
 | SCL  | GPIO 22        | PA25      |
+
+
+> If you don't need the **Evil Twin** function or the **Sour Apple** function,  
+> simply leave them unconnected.
 ---
