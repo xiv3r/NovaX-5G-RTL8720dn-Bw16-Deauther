@@ -23,9 +23,14 @@ std::map<int , std::vector<int>> becaon_channels;
 std::vector<int> chs_idx;
 
 int scrollindex = 0;
-
+// SETTINGS
 int frames_per_deauth = 5;
 int send_delay = 5;
+int frames_per_becaon = 5;
+int max_clone = 5;
+int max_spam_space = 5;
+
+
 bool isDeauthing = false;
 bool led = true;
 
@@ -231,15 +236,18 @@ void becaon(int state){
           byte randomByte = random(0x00, 0xFF);
           snprintf(randomString + i * 3, 4, "\\x%02X", randomByte);
         }
-        String spamssid = generateRandomString(10);
-        const char * spamssid_cstr = spamssid.c_str();
         int randomIndex = random(0,19);
         int randomChannel = allChannels[randomIndex];
 
         wext_set_channel(WLAN0_NAME,randomChannel);
         if(ButtonPress(btnBack)) becaon_break_flag = true;
-        for(int x=0;x<5;x++){
-          wifi_tx_beacon_frame(randomString,(void *) "\xFF\xFF\xFF\xFF\xFF\xFF",spamssid_cstr);
+        String spamssid = generateRandomString(10);
+        for (int j = 0; j<max_spam_space; j++){
+          spamssid += " ";
+          const char * spamssid_cstr = spamssid.c_str();
+          for(int x=0;x<frames_per_becaon;x++){
+            wifi_tx_beacon_frame(randomString,(void *) "\xFF\xFF\xFF\xFF\xFF\xFF",spamssid_cstr);
+          }
         }
         break;
       }
@@ -251,13 +259,10 @@ void becaon(int state){
           String clonessid = scan_results[idx].ssid;
           memcpy(becaon_bssid,scan_results[idx].bssid,6); 
           wext_set_channel(WLAN0_NAME,scan_results[idx].channel);
-          for(int j = 0; j<10; j++){
-          int spaceCount = random(1,11);
-          for (int x = 0; x<spaceCount; x++){
-            clonessid += " ";
-          }
-          const char * clonessid_cstr = clonessid.c_str();
-            wifi_tx_beacon_frame_Privacy_RSN_IE(becaon_bssid,(void *) "\xFF\xFF\xFF\xFF\xFF\xFF",clonessid_cstr);
+          for(int j = 0; j<max_clone; j++){
+            clonessid += " ";            
+            const char * clonessid_cstr = clonessid.c_str();
+            for(int x =0;x<frames_per_becaon;x++) wifi_tx_beacon_frame_Privacy_RSN_IE(becaon_bssid,(void *) "\xFF\xFF\xFF\xFF\xFF\xFF",clonessid_cstr);
           }
         }
         break;
@@ -334,6 +339,14 @@ void deauth(int SetMode) {
   isDeauthing = false;
   wext_set_channel(WLAN0_NAME, current_channel);
 }
+void SendToEsp(String text){
+  Wire.beginTransmission(0x08);
+  Wire.write(text.c_str());
+  Wire.endTransmission();
+  Serial.println("Sent: ");
+  Serial.print(text);
+  delay(50);  
+}
 void SourApple(){
   SendToEsp("Sour Apple Mode");
   display_init();
@@ -386,60 +399,7 @@ void RuningProgressBar(){
   }
   drawProgressBar(10, 40, 100, 10, progress);
 }
-void AT_draw_func(int state){
-  display_init();
-  deauth_break_flag = false;
-  //becaon_break_flag = false;
-  while(true){
-    if(ButtonPress(btnBack)){
-      
-      draw_menu(at_names, selected_menu);
-      break;
-    }
-    if(at_names[state] == "Evil Twin"){
-      ET_Selected();
-      Evil_Twin();
-      break;
-    }
-    display.clearDisplay();
-    display.drawRoundRect(0, 0, 128, 16, 4, WHITE);
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(6, 3);
-    display.println("STATE");
-    display.drawFastHLine(0, 17, 128, WHITE);
-    display.setTextColor(WHITE);
-    display.setCursor(4, 22);
-    display.println(at_names[state]);
-    const int cx = 110, cy = 26, r = 5;
-    display.fillCircle(cx, cy, r, WHITE);
-    display.drawCircle(cx, cy, r, WHITE); 
 
-    display.display();
-    // display.setCursor(15,25);
-    // RuningProgressBar();
-    display.display();
-    if (SelectedItem.size() == 0) SelectedItem.push_back(0);
-    if (at_names[state] == "Deauth") deauth(0);
-    if (at_names[state] == "All Deauth") deauth(1); //if(!deauth_break_flag) 에러시 추가
-    if (at_names[state] == "Becaon"){
-      //selected_menu = state;
-      selected_menu = 0;
-      draw_menu(becaon_names,0);
-      selection_handdler(becaon_names,2);
-      break;
-    }
-    if(at_names[state] == "Sour Apple"){
-      SourApple();
-      break;
-    }
-    if(deauth_break_flag){
-      //selected_menu = state;
-      draw_menu(at_names, selected_menu);
-      break;
-    }
-  }
-}
 int SSID_NUM = 0;
 
 int scrollindex2 = 0;
@@ -598,7 +558,95 @@ void display_init(){
   display.setCursor(0,0);
   display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
 }
+int selected_settings = 0;
 
+std::vector<String> Settings = {"Per Deauth","Per Becaon","Max Clone","Max Spam"};
+bool toggle_ok = false;
+
+void Draw_Settings(){
+  display_init();
+  while (true){
+    int fy2 =0 ;
+    if (ButtonPress(btnBack)){
+      selected_menu = 0;
+      break;
+    }
+    if (ButtonPress(btnOk)){
+      if(toggle_ok) toggle_ok =false;
+      else toggle_ok = true;
+    }
+    if (ButtonPress(btnDown)){
+      if(toggle_ok){
+        switch(selected_settings){
+          case 0:
+            frames_per_deauth++;
+            break;
+          case 1:
+            frames_per_becaon++;
+            break;
+          case 2:
+            max_clone++;
+            break;
+          case 3:
+            max_spam_space++;
+            break;
+        }
+      } else{
+        
+        if(0<selected_settings) selected_settings--;
+      }
+    }
+    if (ButtonPress(btnUp)){
+      if(toggle_ok){
+        if ((frames_per_becaon > 0) && (frames_per_deauth > 0) && (max_clone > 0) && (max_spam_space > 0)){
+          switch(selected_settings){
+            case 0:
+              frames_per_deauth--;
+              break;
+            case 1:
+              frames_per_becaon--;
+              break;
+            case 2:
+              max_clone--;
+              break;
+            case 3:
+              max_spam_space--;
+              break;
+          }
+        }
+      } else{
+        if(selected_settings < Settings.size() - 1) selected_settings++;
+      }
+    }
+    display.clearDisplay();
+    for (int i = 0; i < Settings.size(); i++) {
+      if (selected_settings == i)
+        display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+      else
+        display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+
+      display.setCursor(0, fy2);
+      display.print(Settings[i]);
+      display.setCursor(100, fy2); // 오른쪽에 숫자 출력
+      switch (i) {
+        case 0:
+          display.println(frames_per_deauth);
+          break;
+        case 1:
+          display.println(frames_per_becaon);
+          break;
+        case 2:
+          display.println(max_clone);
+          break;
+        case 3:
+          display.println(max_spam_space);
+          break;
+      }
+      fy2 += 15;
+    }
+    display.display();
+  }
+}
 void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_state) {
 
   while (true) {
@@ -637,6 +685,10 @@ void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_sta
               break;
             case 2:
               Draw_Selected_Menu();
+              draw_menu(menu_name_handle, selected_menu);
+              break;
+            case 3:
+              Draw_Settings();
               draw_menu(menu_name_handle, selected_menu);
               break;
           }
@@ -687,6 +739,60 @@ void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_sta
     }
   }
 }
+void AT_draw_func(int state){
+  display_init();
+  deauth_break_flag = false;
+  //becaon_break_flag = false;
+  while(true){
+    if(ButtonPress(btnBack)){
+      
+      draw_menu(at_names, selected_menu);
+      break;
+    }
+    if(at_names[state] == "Evil Twin"){
+      ET_Selected();
+      Evil_Twin();
+      break;
+    }
+    display.clearDisplay();
+    display.drawRoundRect(0, 0, 128, 16, 4, WHITE);
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(6, 3);
+    display.println("STATE");
+    display.drawFastHLine(0, 17, 128, WHITE);
+    display.setTextColor(WHITE);
+    display.setCursor(4, 22);
+    display.println(at_names[state]);
+    const int cx = 110, cy = 26, r = 5;
+    display.fillCircle(cx, cy, r, WHITE);
+    display.drawCircle(cx, cy, r, WHITE); 
+
+    display.display();
+    // display.setCursor(15,25);
+    // RuningProgressBar();
+    display.display();
+    if (SelectedItem.size() == 0) SelectedItem.push_back(0);
+    if (at_names[state] == "Deauth") deauth(0);
+    if (at_names[state] == "All Deauth") deauth(1); //if(!deauth_break_flag) 에러시 추가
+    if (at_names[state] == "Becaon"){
+      //selected_menu = state;
+      selected_menu = 0;
+      draw_menu(becaon_names,0);
+      selection_handdler(becaon_names,2);
+      break;
+    }
+    if(at_names[state] == "Sour Apple"){
+      SourApple();
+      break;
+    }
+    if(deauth_break_flag){
+      //selected_menu = state;
+      draw_menu(at_names, selected_menu);
+      break;
+    }
+  }
+}
 void setup() {
   Serial.begin(115200);
   setupButtons();
@@ -703,7 +809,7 @@ void setup() {
   display.println("Scaning");
   display.display();
   Wire.begin();
-  main_names = {"Attack", "Scan", "Select"};
+  main_names = {"Attack", "Scan", "Select","Settings"};
   at_names = {"Deauth", "All Deauth","Becaon","Evil Twin","Sour Apple"};
   Serial.println("done");
   DEBUG_SER_INIT();
@@ -725,14 +831,7 @@ void setup() {
   }
   #endif
 }
-void SendToEsp(String text){
-  Wire.beginTransmission(0x08);
-  Wire.write(text.c_str());
-  Wire.endTransmission();
-  Serial.println("Sent: ");
-  Serial.print(text);
-  delay(50);  
-}
+
 void loop() {
   selection_handdler(main_names, 0);
 }
