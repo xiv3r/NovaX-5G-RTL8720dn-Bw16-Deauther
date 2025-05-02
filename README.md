@@ -58,8 +58,8 @@ I am **not** responsible for any consequences arising from the use of this tool,
 |------|----------------|-----------|
 | SDA  | GPIO 21        | PA26      |
 | SCL  | GPIO 22        | PA25      |
-
-
+| GND  | GND            | GND       |
+| 3V3  | 3V3            | 3V3       |
 > If you don't need the **Evil Twin** function or the **Sour Apple** function,  
 > simply leave them unconnected.
 ---
