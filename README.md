@@ -81,3 +81,5 @@ I am **not** responsible for any consequences arising from the use of this tool,
 > If you don't need the **Evil Twin** function or the **Sour Apple** function,  
 > simply leave them unconnected.
 ---
+### Feedback
+If you find any **issues** or have **suggestions**, please let me know on **Discord**: `warwick.320`
