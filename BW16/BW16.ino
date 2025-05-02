@@ -206,14 +206,25 @@ int allChannels[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 36, 40, 44, 48, 149, 153
 bool becaon_break_flag = false;
 
 void becaon(int state){
-  display.clearDisplay();
   display_init();
-  display.setCursor(20,25);
-  if (state == 0) display.println("Spaming");
-  else display.println("Cloning");
+  display.clearDisplay();
+  display.drawRoundRect(0, 0, 128, 16, 4, WHITE);
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(6, 3);
+  display.println("STATE");
+  display.drawFastHLine(0, 17, 128, WHITE);
+  display.setTextColor(WHITE);
+  display.setCursor(4, 22);
+  display.println(becaon_names[state]);
+  const int cx = 110, cy = 26, r = 5;
+  display.fillCircle(cx, cy, r, WHITE);
+  display.drawCircle(cx, cy, r, WHITE); 
   display.display();
 
   while(!becaon_break_flag){
+    RuningProgressBar();
+    display.display();
     switch (state) {
       case 0: {
         for(int i=0;i<6;i++){
