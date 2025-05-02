@@ -6,7 +6,15 @@ This tool has been made for **educational** and **testing** purposes only. Any m
 I am **not** responsible for any consequences arising from the use of this tool, which is done at your own risk.
 
 ---
-
+## NEW Update 2025-05-02
+- **add Evil Twin**
+- **add Sour Appe** [source](https://github.com/ckcr4lyf/EvilAppleJuice-ESP32/blob/master/src/EvilAppleJuice-ESP32-INO/EvilAppleJuice-ESP32-INO.ino)
+- **Fix Some Problems**
+- **Changed UI**
+- **Imporved Becaon Attack Funtcions**
+- **Imporved Deauth Attack Funtcions**
+---
+---
 ## Firmware Upload Guide
 
 ### Setup
@@ -31,7 +39,7 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **SSD1306 Display**
 - **4 Buttons**
 - **BW16 Board**
-
+- **ESP32 Board**
 ---
 
 ## Connections
@@ -45,5 +53,7 @@ I am **not** responsible for any consequences arising from the use of this tool,
 ### SSD1306 Display
 - **SDA**: `PA26`
 - **SCL**: `PA25`
-
+## ESP32
+- **SDA**: `GPIO 21`
+- **SCL**: `GPIO 22`
 ---
