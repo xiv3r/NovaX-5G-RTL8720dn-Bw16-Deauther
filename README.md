@@ -14,6 +14,8 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **Imporved Becaon Attack Functions**
 - **Imporved Deauth Attack Functions**
 ---
+> Currently, the Evil Twin feature is only capable of stealing the password of the target Wi-Fi,  
+> but in the future, functionalities such as Google login forms will be added.
 ---
 ## Firmware Upload Guide
 
