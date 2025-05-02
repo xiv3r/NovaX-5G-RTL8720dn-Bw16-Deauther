@@ -11,29 +11,44 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **add Sour Apple** [source](https://github.com/ckcr4lyf/EvilAppleJuice-ESP32/blob/master/src/EvilAppleJuice-ESP32-INO/EvilAppleJuice-ESP32-INO.ino)
 - **Fix Some Problems**
 - **Changed UI**
-- **Imporved Becaon Attack Functions**
-- **Imporved Deauth Attack Functions**
+- **Improved Beacon Attack Functions**
+- **Improved Deauth Attack Functions**
 ---
 > Currently, the Evil Twin feature is only capable of stealing the password of the target Wi-Fi,  
 > but in the future, functionalities such as Google login forms will be added.
 ---
 ## Firmware Upload Guide
 
-### Setup
+### BW16 Setup
 1. Open **Arduino IDE**.
 2. Click **File** > **Preferences**.
 3. Add the following Additional Boards Manager URL:  
    `https://github.com/ambiot/ambd_arduino/raw/master/Arduino_package/package_realtek_amebad_index.json`
 4. Go to **Boards Manager** and search for **BW16**.
 5. Download the **Realtek Amebaa Boards** (version 3.1.5) manager.
-
+### ESP32 Setup
+1. Open **Arduino IDE**.
+2. Click **File** > **Preferences**.
+3. Add the following Additional Boards Manager URL:  
+   `https://espressif.github.io/arduino-esp32/package_esp32_index.json`
+4. Go to **Boards Manger** and search for **Esp32**.
+5. Downlload the **esp32 by Espressif Sysytems** board manager.
 ### How to Upload Firmware
-1. Open the `.ino` file in Arduino IDE.
+#### BW16
+1. Open the BW16 folder in `BW16.ino` file in Arduino IDE.
 2. Click on **Tools**.
-3. Enable **Auto Upload Mode** and click **Enable**.
-4. Enable **Standard Lib** and select **Arduino_STD_PRINTF**.
+3. Click **Board** and Select `Ai-Thinker BW16(RTL8720DN)`
+4. Enable **Auto Upload Mode** and click **Enable**.
+5. Enable **Standard Lib** and select **Arduino_STD_PRINTF**.
+6. Click **Upload** to upload the firmware.
+#### ESP32
+1. Open the Esp32 folder in `.ino` file in Arduino IDE.
+2. Click on **Tools**.
+3. Click **Board** and Select `ESP32 Dev Module` (Your ESP32 Board)
+4. Click **Partition Scheme** and Select **No OTA (2MB APP/2MB SPIFFS)**
 5. Click **Upload** to upload the firmware.
-
+> Note: The **Evil Twin** function is not compatible with the **ESP32-S3** board,  
+> but using it may increase the effective range of **Sour Apple**.
 ---
 
 ## Requirements
@@ -51,6 +66,7 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **Down Button**: `PA12`
 - **Select Button**: `PA13`
 - **Back Button**: `PB2`
+> In this new version, you **must** connect the **Back Button**.
 
 ### SSD1306 Display
 - **SDA**: `PA26`
