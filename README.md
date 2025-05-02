@@ -54,6 +54,8 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **SDA**: `PA26`
 - **SCL**: `PA25`
 ## ESP32
-- **SDA**: `GPIO 21`
-- **SCL**: `GPIO 22`
+| I2C  | ESP32          | BW16      |
+|------|----------------|-----------|
+| SDA  | GPIO 21        | PA26      |
+| SCL  | GPIO 22        | PA25      |
 ---
