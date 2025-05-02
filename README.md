@@ -8,7 +8,7 @@ I am **not** responsible for any consequences arising from the use of this tool,
 ---
 ## NEW Update 2025-05-02
 - **add Evil Twin**
-- **add Sour Appe** [source](https://github.com/ckcr4lyf/EvilAppleJuice-ESP32/blob/master/src/EvilAppleJuice-ESP32-INO/EvilAppleJuice-ESP32-INO.ino)
+- **add Sour Apple** [source](https://github.com/ckcr4lyf/EvilAppleJuice-ESP32/blob/master/src/EvilAppleJuice-ESP32-INO/EvilAppleJuice-ESP32-INO.ino)
 - **Fix Some Problems**
 - **Changed UI**
 - **Imporved Becaon Attack Funtcions**
