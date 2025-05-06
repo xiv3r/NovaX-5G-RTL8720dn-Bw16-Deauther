@@ -65,7 +65,7 @@ I am **not** responsible for any consequences arising from the use of this tool,
 - **Up Button**: `PA27`
 - **Down Button**: `PA12`
 - **Select Button**: `PA13`
-- **Back Button**: `PB2`
+- **Back Button**: `PB3`
 > In this new version, you **must** connect the **Back Button**.
 
 ### SSD1306 Display
