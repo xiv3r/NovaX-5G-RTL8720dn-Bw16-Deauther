@@ -1,13 +1,9 @@
-# Source
-[Link](https://github.com/tesa-klebeband/RTL8720dn-Deauther)
-## DISCLAIMER
 
-This tool has been made for **educational** and **testing** purposes only. Any misuse or illegal activities conducted with the tool are strictly prohibited.  
-I am **not** responsible for any consequences arising from the use of this tool, which is done at your own risk.
 ---
 ## NEW Update 2025-05-08
 - **Added animation to the screen**
 ---
+
 ---
 ## NEW Update 2025-05-02
 - **add Evil Twin**
@@ -84,5 +80,12 @@ I am **not** responsible for any consequences arising from the use of this tool,
 > If you don't need the **Evil Twin** function or the **Sour Apple** function,  
 > simply leave them unconnected.
 ---
+# Source
+[Link](https://github.com/tesa-klebeband/RTL8720dn-Deauther)
+## DISCLAIMER
+
+This tool has been made for **educational** and **testing** purposes only. Any misuse or illegal activities conducted with the tool are strictly prohibited.  
+I am **not** responsible for any consequences arising from the use of this tool, which is done at your own risk.
+
 ### Feedback
 If you find any **issues** or have **suggestions**, please let me know on **Discord**: `warwick.320`
