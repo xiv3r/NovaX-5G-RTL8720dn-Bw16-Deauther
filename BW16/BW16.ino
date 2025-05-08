@@ -25,10 +25,10 @@ std::vector<int> chs_idx;
 int scrollindex = 0;
 // SETTINGS
 int frames_per_deauth = 5;
-int send_delay = 5;
-int frames_per_becaon = 5;
-int max_clone = 5;
-int max_spam_space = 5;
+int send_delay = 3;
+int frames_per_becaon = 3;
+int max_clone = 3;
+int max_spam_space = 3;
 
 
 bool isDeauthing = false;
@@ -97,18 +97,7 @@ rtw_result_t scanResultHandler(rtw_scan_handler_result_t *scan_result) {
   }
   return RTW_SUCCESS;
 }
-int scanNetworks() {
-  DEBUG_SER_PRINT("Scanning WiFi networks (5s)...");
-  scan_results.clear();
-  if (wifi_scan_networks(scanResultHandler, NULL) == RTW_SUCCESS) {
-    delay(5000);
-    DEBUG_SER_PRINT(" done!\n");
-    return 0;
-  } else {
-    DEBUG_SER_PRINT(" failed!\n");
-    return 1;
-  }
-}
+
 
 
 
@@ -119,37 +108,198 @@ std::vector<String> becaon_names = {"Spam","Clone"};
 std::vector<int> SelectedItem;
 int fy = 0;
 bool init_draw_menu_flag = false;
+void drawBorders() {
+    display.drawLine(25, 0, 55, 0, WHITE);
+    display.drawLine(73, 0, 103, 0, WHITE);
+    display.drawLine(25, 63, 55, 63, WHITE);
+    display.drawLine(73, 63, 103, 63, WHITE);
+}
 
+
+void drawScrollbar(int selected, int menuSize, int maxVis, int lineH, int scrollBarW) {
+    if (menuSize > maxVis) {
+        int scrollBarH = (maxVis * lineH) * maxVis / menuSize;
+        int scrollBarY = (selected * (maxVis * lineH - scrollBarH)) / (menuSize - 1);
+        display.drawRect(128 - scrollBarW - 1, 3, scrollBarW, maxVis * lineH, WHITE);
+        display.fillRect(128 - scrollBarW, scrollBarY + 3, scrollBarW - 1, scrollBarH, WHITE);
+    }
+}
+
+
+void drawNavHints(int menuSize) {
+    if (menuSize > 1) {
+        display.fillTriangle(10, 0, 6, 4, 14, 4, WHITE);    // up
+        display.fillTriangle(10, 63, 6, 59, 14, 59, WHITE); // down
+    }
+}
+
+
+void drawPositionText(int selected, int menuSize, int maxVis) {
+    if (menuSize > maxVis) {
+        char positionText[8];
+        sprintf(positionText, "%d/%d", selected + 1, menuSize);
+        display.setTextSize(1);
+        display.setTextColor(WHITE);
+        display.setCursor(100, 54);
+        display.print(positionText);
+    }
+}
+
+
+void renderText(const std::vector<String>& menu_name, int start, int fy, int renderCount, int lineH, int textHeight, int menuSize, int maxVis) {
+    for (int idx = start; idx < menu_name.size() && idx < start + renderCount; idx++) {
+        if (fy >= -lineH && fy < 64) { // 화면 내에서만 렌더링
+            int textWidth = menu_name[idx].length() * 6;
+            int rectWidth = textWidth + 10;
+            int maxWidth = (menuSize > maxVis) ? 110 : 118;
+            if (rectWidth < 40) rectWidth = 40;
+            if (rectWidth > maxWidth) rectWidth = maxWidth;
+            int rectX = (maxWidth - rectWidth) / 2 + 5;
+            
+            display.setTextColor(SSD1306_WHITE);
+            int textX = rectX + (rectWidth - textWidth) / 2; // 수평 중앙
+            int textY = fy + (lineH - textHeight) / 2;       // 수직 중앙
+            display.setCursor(textX, textY);
+            display.println(menu_name[idx]);
+        }
+        fy += lineH;
+    }
+}
+
+
+void renderRoundRect(int rectX, int rectY, int rectWidth, int lineH, int cornerRadius) {
+    display.drawRoundRect(rectX, rectY, rectWidth, lineH, cornerRadius, WHITE);
+    display.drawRoundRect(rectX + 1, rectY + 1, rectWidth - 2, lineH - 2, cornerRadius - 1, WHITE);
+}
 
 void draw_menu(std::vector<String>& menu_name, int selected) {
-  const int lineH = 16;
-  const int maxVis = 4;              
-  int start = 0;
-
-
-  if (selected > maxVis - 1) {
-    start = selected - (maxVis - 1);
-  }
-
-  display.clearDisplay();
-  int fy = 0;
-
-  for (int idx = start; idx < menu_name.size() && idx < start + maxVis; idx++) {
-    if (idx == selected) {
-      display.drawRoundRect(0, fy, 128, lineH, 4, WHITE);
-      display.fillRoundRect(1, fy+1, 128-2, lineH-2, 4, WHITE);
-      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
+    static int prev_selected = -1;
+    const int lineH = 15;
+    const int maxVis = 4;
+    const int cornerRadius = 5;
+    const int scrollBarW = 3;
+    const int frames = 12;
+    const float step = 1.0 / frames;
+    const int textHeight = 8;
+    const int menuSize = menu_name.size();
+  
+    if (prev_selected == -1 || prev_selected == selected) {
+        prev_selected = selected;
+        
+        display.clearDisplay();
+        
+        int start = 0;
+        if (menuSize > maxVis && selected >= maxVis - 1) {
+            start = selected - (maxVis - 1);
+            if (start + maxVis > menuSize) {
+                start = menuSize - maxVis;
+            }
+        }
+        
+        drawBorders();
+        drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
+        drawPositionText(selected, menuSize, maxVis);
+        renderText(menu_name, start, 3, maxVis, lineH, textHeight, menuSize, maxVis);
+        
+        int fy = 3;
+        for (int idx = start; idx < menuSize && idx < start + maxVis; idx++) {
+            if (idx == selected) {
+                int textWidth = menu_name[selected].length() * 6;
+                int rectWidth = textWidth + 10;
+                int maxWidth = (menuSize > maxVis) ? 110 : 118;
+                if (rectWidth < 40) rectWidth = 40;
+                if (rectWidth > maxWidth) rectWidth = maxWidth;
+                int rectX = (maxWidth - rectWidth) / 2 + 5;
+                renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
+            }
+            fy += lineH;
+        }
+        
+        drawNavHints(menuSize);
+        display.display();
+        return;
     }
-    else {
-      display.setTextColor(SSD1306_WHITE);
+    
+    // 이전 및 현재 선택 항목의 시작점 계산
+    int prev_start = 0;
+    if (menuSize > maxVis && prev_selected >= maxVis - 1) {
+        prev_start = prev_selected - (maxVis - 1);
+        if (prev_start + maxVis > menuSize) {
+            prev_start = menuSize - maxVis;
+        }
     }
+    
+    int start = 0;
+    if (menuSize > maxVis && selected >= maxVis - 1) {
+        start = selected - (maxVis - 1);
+        if (start + maxVis > menuSize) {
+            start = menuSize - maxVis;
+        }
+    }
+    
+    int prevY = 3 + (prev_selected - prev_start) * lineH;
+    int targetY = 3 + (selected - start) * lineH;
+    int prevTextWidth = menu_name[prev_selected].length() * 6;
+    int prevRectWidth = prevTextWidth + 10;
+    int maxWidth = (menuSize > maxVis) ? 110 : 118;
+    if (prevRectWidth < 40) prevRectWidth = 40;
+    if (prevRectWidth > maxWidth) prevRectWidth = maxWidth;
+    
+    int targetTextWidth = menu_name[selected].length() * 6;
+    int targetRectWidth = targetTextWidth + 10;
+    if (targetRectWidth < 40) targetRectWidth = 40;
+    if (targetRectWidth > maxWidth) targetRectWidth = maxWidth;
+    for (int i = 1; i <= frames; i++) {
+        float t = i * step;
+        float easedT = 1.0 - (1.0 - t) * (1.0 - t);
+        int currentY = prevY + (targetY - prevY) * easedT;
+        int currentWidth = prevRectWidth + (targetRectWidth - prevRectWidth) * easedT;
+        int currentX = (maxWidth - currentWidth) / 2 + 5;
+        
 
-    display.setCursor(4, fy + 3);
-    display.println(menu_name[idx]);
-    fy += lineH;
-  }
-
-  display.display();
+        float currentStart = prev_start + (start - prev_start) * easedT;
+        int renderStart = (int)currentStart;
+        float startFraction = currentStart - renderStart;
+        
+        display.clearDisplay();
+        
+        int fy = 3 - (int)(startFraction * lineH);
+        drawBorders();
+        drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
+        drawPositionText(selected, menuSize, maxVis);
+        renderText(menu_name, renderStart, fy, maxVis + 1, lineH, textHeight, menuSize, maxVis);
+        renderRoundRect(currentX, currentY, currentWidth, lineH, cornerRadius);
+        drawNavHints(menuSize);
+        
+        display.display();
+        delay(4);
+    }
+    
+    display.clearDisplay();
+    
+    drawBorders();
+    drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
+    drawPositionText(selected, menuSize, maxVis);
+    renderText(menu_name, start, 3, maxVis, lineH, textHeight, menuSize, maxVis);
+    
+    int fy = 3;
+    for (int idx = start; idx < menuSize && idx < start + maxVis; idx++) {
+        if (idx == selected) {
+            int textWidth = menu_name[selected].length() * 6;
+            int rectWidth = textWidth + 10;
+            int maxWidth = (menuSize > maxVis) ? 110 : 118;
+            if (rectWidth < 40) rectWidth = 40;
+            if (rectWidth > maxWidth) rectWidth = maxWidth;
+            int rectX = (maxWidth - rectWidth) / 2 + 5;
+            renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
+        }
+        fy += lineH;
+    }
+    
+    drawNavHints(menuSize);
+    display.display();
+    
+    prev_selected = selected;
 }
 bool contains(std::vector<int>& vec, int value) {
   for (int v : vec) {
@@ -267,8 +417,8 @@ void becaon(int state){
         }
         break;
       }
-    } // switch 끝
-  } // while 끝
+    } 
+  } 
 }
 
 bool deauth_break_flag = false;
@@ -478,79 +628,194 @@ void Evil_Twin() {
     delay(10);
   }
 }
-void ET_Selected(){
-  display.clearDisplay();
-  showPopup("Selecte Target SSID");
-  const int lineHeight = 15;                         
-  const int maxLines  = SCREEN_HEIGHT / lineHeight;
-  bool checked = false;
-  while(true){
-    if (ButtonPress(btnDown)&&scrollindex2 > 0) scrollindex2--;
-    if (ButtonPress(btnUp)&&scrollindex2 < scan_results.size() - 1) scrollindex2++;
-    if(ButtonPress(btnOk)){
-      SSID_NUM = scrollindex2;
-      break;
-    }
-    if(ButtonPress(btnBack)) break;
-
-    int pageStart = (scrollindex2 / maxLines) * maxLines;
+void ET_Selected() {
     display.clearDisplay();
-    for (int line = 0; line < maxLines; line++){
-      int idx = pageStart + line;
-      if (idx >= scan_results.size()) break;
-      if(idx == scrollindex2) display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-      else display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
-      String ssid = scan_results[idx].ssid;
-      if(ssid.length()==0) ssid = "#HIDDEN";
-      else if (ssid.length() > 13) ssid = ssid.substring(0,13) + "...";
-      display.setCursor(0, line * lineHeight);
-      display.print(ssid);     
+    showPopup("Selecte Target SSID");
+    const int lineH = 15;         
+    const int maxVis = 4;         
+    const int cornerRadius = 5;   
+    const int frames = 12;       
+    const float step = 1.0 / frames; 
+    const int textHeight = 8;     
+    static int prev_scrollindex2 = -1; 
+
+    while (true) {
+        int pageStart = (scrollindex2 / maxVis) * maxVis;
+        int prevPageStart = prev_scrollindex2 == -1 ? pageStart : (prev_scrollindex2 / maxVis) * maxVis;
+        bool animate = false;
+
+        if (ButtonPress(btnDown) && scrollindex2 > 0) {
+            prev_scrollindex2 = scrollindex2;
+            scrollindex2--;
+            prevPageStart = (prev_scrollindex2 / maxVis) * maxVis;
+            pageStart = (scrollindex2 / maxVis) * maxVis;
+            animate = prev_scrollindex2 != -1;
+        }
+        if (ButtonPress(btnUp) && scrollindex2 < scan_results.size() - 1) {
+            prev_scrollindex2 = scrollindex2;
+            scrollindex2++;
+            prevPageStart = (prev_scrollindex2 / maxVis) * maxVis;
+            pageStart = (scrollindex2 / maxVis) * maxVis;
+            animate = prev_scrollindex2 != -1;
+        }
+        if (ButtonPress(btnOk)) {
+            SSID_NUM = scrollindex2;
+            break;
+        }
+        if (ButtonPress(btnBack)) {
+            break;
+        }
+
+        if (animate) {
+            int prevY = 3 + (prev_scrollindex2 - prevPageStart) * lineH;
+            int targetY = 3 + (scrollindex2 - pageStart) * lineH;
+            const int rectWidth = SCREEN_WIDTH; // 화면 전체 너비
+            const int rectX = 0; // 왼쪽 정렬
+
+            for (int i = 1; i <= frames; i++) {
+                float t = i * step;
+                float easedT = 1.0 - (1.0 - t) * (1.0 - t); // Quadratic easing out
+                int currentY = prevY + (targetY - prevY) * easedT;
+
+                display.clearDisplay();
+                for (int line = 0; line < maxVis; line++) {
+                    int idx = pageStart + line;
+                    if (idx >= scan_results.size()) break;
+                    String ssid = scan_results[idx].ssid;
+                    if (ssid.length() == 0) ssid = "#HIDDEN";
+                    else if (ssid.length() > 13) ssid = ssid.substring(0, 13) + "...";
+                    int fy = 3 + line * lineH;
+                    display.setTextColor(SSD1306_WHITE);
+                    int textY = fy + (lineH - textHeight) / 2;
+                    display.setCursor(5, textY); // 왼쪽 여백 5px
+                    display.print(ssid);
+                }
+                renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
+                display.display();
+                delay(4);
+            }
+        }
+
+        display.clearDisplay();
+        const int rectWidth = SCREEN_WIDTH; // 화면 전체 너비
+        const int rectX = 0; // 왼쪽 정렬
+        for (int line = 0; line < maxVis; line++) {
+            int idx = pageStart + line;
+            if (idx >= scan_results.size()) break;
+            String ssid = scan_results[idx].ssid;
+            if (ssid.length() == 0) ssid = "#HIDDEN";
+            else if (ssid.length() > 13) ssid = ssid.substring(0, 13) + "...";
+            int fy = 3 + line * lineH;
+            display.setTextColor(SSD1306_WHITE);
+            int textY = fy + (lineH - textHeight) / 2;
+            display.setCursor(5, textY); // 왼쪽 여백 5px
+            display.print(ssid);
+            if (idx == scrollindex2) {
+                renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
+            }
+        }
+        display.display();
+        
+        prev_scrollindex2 = scrollindex2;
     }
-    display.display();
-  }
 }
 void Draw_Selected_Menu() {
-  const int lineHeight = 15;                         
-  const int maxLines  = SCREEN_HEIGHT / lineHeight;
+    const int lineH = 15;         
+    const int maxVis = 4;        
+    const int cornerRadius = 5;   
+    const int frames = 12;        
+    const float step = 1.0 / frames; 
+    const int textHeight = 8;     
+    const int markWidth = 3 * 6;  
+    static int prev_scrollindex = -1; 
 
-  while (true) {
-    // 버튼 처리
-    if (ButtonPress(btnUp) && scrollindex < scan_results.size() - 1)scrollindex++;
-    if (ButtonPress(btnDown) && scrollindex > 0) scrollindex--;
-    if (ButtonPress(btnOk))addValue(SelectedItem, scrollindex);
-    if (ButtonPress(btnBack)){
-      selected_menu = 0;
-      break;
+    while (true) {
+        int pageStart = (scrollindex / maxVis) * maxVis;
+        int prevPageStart = prev_scrollindex == -1 ? pageStart : (prev_scrollindex / maxVis) * maxVis;
+        bool animate = false;
+
+        if (ButtonPress(btnUp) && scrollindex < scan_results.size() - 1) {
+            prev_scrollindex = scrollindex;
+            scrollindex++;
+            prevPageStart = (prev_scrollindex / maxVis) * maxVis;
+            pageStart = (scrollindex / maxVis) * maxVis;
+            animate = prev_scrollindex != -1;
+        }
+        if (ButtonPress(btnDown) && scrollindex > 0) {
+            prev_scrollindex = scrollindex;
+            scrollindex--;
+            prevPageStart = (prev_scrollindex / maxVis) * maxVis;
+            pageStart = (scrollindex / maxVis) * maxVis;
+            animate = prev_scrollindex != -1;
+        }
+        if (ButtonPress(btnOk)) {
+            addValue(SelectedItem, scrollindex);
+        }
+        if (ButtonPress(btnBack)) {
+            selected_menu = 0;
+            break;
+        }
+
+        if (animate) {
+            int prevY = 3 + (prev_scrollindex - prevPageStart) * lineH;
+            int targetY = 3 + (scrollindex - pageStart) * lineH;
+            const int rectWidth = SCREEN_WIDTH; // 화면 전체 너비
+            const int rectX = 0; // 왼쪽 정렬
+
+            for (int i = 1; i <= frames; i++) {
+                float t = i * step;
+                float easedT = 1.0 - (1.0 - t) * (1.0 - t); // Quadratic easing out
+                int currentY = prevY + (targetY - prevY) * easedT;
+
+                display.clearDisplay();
+                for (int line = 0; line < maxVis; line++) {
+                    int idx = pageStart + line;
+                    if (idx >= scan_results.size()) break;
+                    String ssid = scan_results[idx].ssid;
+                    if (ssid.length() == 0) ssid = "#HIDDEN";
+                    else if (ssid.length() > 13) ssid = ssid.substring(0, 13) + "...";
+                    bool checked = contains(SelectedItem, idx);
+                    String mark = checked ? "[*]" : "[ ]";
+                    int fy = 3 + line * lineH;
+                    display.setTextColor(SSD1306_WHITE);
+                    int textY = fy + (lineH - textHeight) / 2;
+                    display.setCursor(5, textY); // 왼쪽 여백 5px
+                    display.print(ssid);
+                    display.setCursor(SCREEN_WIDTH - markWidth - 5, textY); // 오른쪽 여백 5px
+                    display.print(mark);
+                }
+                renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
+                display.display();
+                delay(4);
+            }
+        }
+
+        display.clearDisplay();
+        const int rectWidth = SCREEN_WIDTH; // 화면 전체 너비
+        const int rectX = 0; // 왼쪽 정렬
+        for (int line = 0; line < maxVis; line++) {
+            int idx = pageStart + line;
+            if (idx >= scan_results.size()) break;
+            String ssid = scan_results[idx].ssid;
+            if (ssid.length() == 0) ssid = "#HIDDEN";
+            else if (ssid.length() > 13) ssid = ssid.substring(0, 13) + "...";
+            bool checked = contains(SelectedItem, idx);
+            String mark = checked ? "[*]" : "[ ]";
+            int fy = 3 + line * lineH;
+            display.setTextColor(SSD1306_WHITE);
+            int textY = fy + (lineH - textHeight) / 2;
+            display.setCursor(5, textY); // 왼쪽 여백 5px
+            display.print(ssid);
+            display.setCursor(SCREEN_WIDTH - markWidth - 5, textY); // 오른쪽 여백 5px
+            display.print(mark);
+            if (idx == scrollindex) {
+                renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
+            }
+        }
+        display.display();
+        
+        prev_scrollindex = scrollindex;
     }
-    int pageStart = (scrollindex / maxLines) * maxLines;
-    display.clearDisplay();
-    for (int line = 0; line < maxLines; line++) {
-      int idx = pageStart + line;
-      if (idx >= scan_results.size()) break;
-
-      if (idx == scrollindex) {
-        display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-      } else {
-        display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
-      }
-
-
-      String ssid = scan_results[idx].ssid;
-      if (ssid.length() == 0) ssid = "#HIDDEN";
-      else if (ssid.length() > 13) ssid = ssid.substring(0, 13) + "...";
-
-
-      bool checked = contains(SelectedItem, idx);
-      String mark = checked ? "[*]" : "[ ]";
-
-      display.setCursor(0, line * lineHeight);
-      display.print(ssid);
-      display.setCursor(SCREEN_WIDTH - 3 * 6, line * lineHeight);
-      display.print(mark);
-    }
-
-    display.display();
-  }
 }
 
 void display_init(){
@@ -562,90 +827,133 @@ int selected_settings = 0;
 
 std::vector<String> Settings = {"Per Deauth","Per Becaon","Max Clone","Max Spam"};
 bool toggle_ok = false;
+void renderText(const std::vector<String>& settings, int start, int fy, int renderCount, int lineH, int textHeight, int selected) {
+    for (int idx = start; idx < settings.size() && idx < start + renderCount; idx++) {
+        if (fy >= -lineH && fy < 64) { // 화면 내에서만 렌더링
+            display.setTextColor(SSD1306_WHITE);
+            int textX = 10; // 고정된 x 위치
+            int textY = fy + (lineH - textHeight) / 2; // 수직 중앙
+            display.setCursor(textX, textY);
+            display.print(settings[idx]);
+            display.setCursor(100, textY); // 오른쪽에 숫자 출력
+            switch (idx) {
+                case 0:
+                    display.println(frames_per_deauth);
+                    break;
+                case 1:
+                    display.println(frames_per_becaon);
+                    break;
+                case 2:
+                    display.println(max_clone);
+                    break;
+                case 3:
+                    display.println(max_spam_space);
+                    break;
+            }
+        }
+        fy += lineH;
+    }
+}
 
-void Draw_Settings(){
-  display_init();
-  while (true){
-    int fy2 =0 ;
-    if (ButtonPress(btnBack)){
-      selected_menu = 0;
-      break;
-    }
-    if (ButtonPress(btnOk)){
-      if(toggle_ok) toggle_ok =false;
-      else toggle_ok = true;
-    }
-    if (ButtonPress(btnDown)){
-      if(toggle_ok){
-        switch(selected_settings){
-          case 0:
-            frames_per_deauth++;
-            break;
-          case 1:
-            frames_per_becaon++;
-            break;
-          case 2:
-            max_clone++;
-            break;
-          case 3:
-            max_spam_space++;
+void Draw_Settings() {
+    display_init();
+    int prev_selected_settings = selected_settings;
+    const int lineH = 15;
+    const int textHeight = 8;
+    const int frames = 12;
+    const int cornerRadius = 5;
+    const int rectX = 5; 
+    const int rectWidth = 118; 
+
+    while (true) {
+        if (ButtonPress(btnBack)) {
+            selected_menu = 0; 
+            toggle_ok = false;
             break;
         }
-      } else{
-        
-        if(0<selected_settings) selected_settings--;
-      }
-    }
-    if (ButtonPress(btnUp)){
-      if(toggle_ok){
-        if ((frames_per_becaon > 0) && (frames_per_deauth > 0) && (max_clone > 0) && (max_spam_space > 0)){
-          switch(selected_settings){
-            case 0:
-              frames_per_deauth--;
-              break;
-            case 1:
-              frames_per_becaon--;
-              break;
-            case 2:
-              max_clone--;
-              break;
-            case 3:
-              max_spam_space--;
-              break;
-          }
+        if (ButtonPress(btnOk)) {
+            toggle_ok = !toggle_ok;
         }
-      } else{
-        if(selected_settings < Settings.size() - 1) selected_settings++;
-      }
+        if (ButtonPress(btnDown)) {
+            if (toggle_ok) {
+                switch (selected_settings) {
+                    case 0:
+                        frames_per_deauth++;
+                        break;
+                    case 1:
+                        frames_per_becaon++;
+                        break;
+                    case 2:
+                        max_clone++;
+                        break;
+                    case 3:
+                        max_spam_space++;
+                        break;
+                }
+            } else {
+                if (0 < selected_settings) {
+                    prev_selected_settings = selected_settings;
+                    selected_settings--;
+                    // 애니메이션
+                    int prevY = 3 + prev_selected_settings * lineH;
+                    int targetY = 3 + selected_settings * lineH;
+                    for (int i = 1; i <= frames; i++) {
+                        float t = i / (float)frames;
+                        float easedT = 1.0 - (1.0 - t) * (1.0 - t); // Quadratic easing out
+                        int currentY = prevY + (targetY - prevY) * easedT;
+                        display.clearDisplay();
+                        renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
+                        renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
+                        display.display();
+                        delay(4); // 프레임 간 지연
+                    }
+                }
+            }
+        }
+        if (ButtonPress(btnUp)) {
+            if (toggle_ok) {
+                if ((frames_per_becaon > 0) && (frames_per_deauth > 0) && (max_clone > 0) && (max_spam_space > 0)) {
+                    switch (selected_settings) {
+                        case 0:
+                            frames_per_deauth--;
+                            break;
+                        case 1:
+                            frames_per_becaon--;
+                            break;
+                        case 2:
+                            max_clone--;
+                            break;
+                        case 3:
+                            max_spam_space--;
+                            break;
+                    }
+                }
+            } else {
+                if (selected_settings < Settings.size() - 1) {
+                    prev_selected_settings = selected_settings;
+                    selected_settings++;
+                    // 애니메이션
+                    int prevY = 3 + prev_selected_settings * lineH;
+                    int targetY = 3 + selected_settings * lineH;
+                    for (int i = 1; i <= frames; i++) {
+                        float t = i / (float)frames;
+                        float easedT = 1.0 - (1.0 - t) * (1.0 - t); // Quadratic easing out
+                        int currentY = prevY + (targetY - prevY) * easedT;
+                        display.clearDisplay();
+                        renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
+                        renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
+                        display.display();
+                        delay(4); // 프레임 간 지연
+                    }
+                }
+            }
+        }
+        display.clearDisplay();
+        renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
+        int fy = 3 + selected_settings * lineH;
+        renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
+        display.display();
     }
-    display.clearDisplay();
-    for (int i = 0; i < Settings.size(); i++) {
-      if (selected_settings == i)
-        display.setTextColor(SSD1306_BLACK, SSD1306_WHITE);
-      else
-        display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
-
-      display.setCursor(0, fy2);
-      display.print(Settings[i]);
-      display.setCursor(100, fy2); // 오른쪽에 숫자 출력
-      switch (i) {
-        case 0:
-          display.println(frames_per_deauth);
-          break;
-        case 1:
-          display.println(frames_per_becaon);
-          break;
-        case 2:
-          display.println(max_clone);
-          break;
-        case 3:
-          display.println(max_spam_space);
-          break;
-      }
-      fy2 += 15;
-    }
-    display.display();
-  }
 }
 void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_state) {
 
@@ -653,7 +961,7 @@ void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_sta
     //draw_menu(names,selected_menu);
     if (ButtonPress(btnBack)) {
       Serial.println("BACK");
-      selected_menu = 0;
+      if (!menu_func_state == 0) selected_menu = 0;
       break;
     }
     if (ButtonPress(btnOk)) {
@@ -669,17 +977,9 @@ void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_sta
               draw_menu(menu_name_handle, selected_menu);  // MUST NEED IT
               break;
             case 1:
-              display.clearDisplay();
-              display.setCursor(20,25);
-              display.println("Re Scaning");
-              display.display();
               if (scanNetworks() != 0) {
                 while(true) delay(1000);
               }
-              display.clearDisplay();
-              display.println("Done");
-              display.display();
-              delay(150);
               selected_menu = 0;
               draw_menu(menu_name_handle, selected_menu);
               break;
@@ -754,6 +1054,13 @@ void AT_draw_func(int state){
       Evil_Twin();
       break;
     }
+    if (at_names[state] == "Becaon"){
+      //selected_menu = state;
+      selected_menu = 0;
+      draw_menu(becaon_names,0);
+      selection_handdler(becaon_names,2);
+      break;
+    }
     display.clearDisplay();
     display.drawRoundRect(0, 0, 128, 16, 4, WHITE);
     display.setTextSize(1);
@@ -775,13 +1082,6 @@ void AT_draw_func(int state){
     if (SelectedItem.size() == 0) SelectedItem.push_back(0);
     if (at_names[state] == "Deauth") deauth(0);
     if (at_names[state] == "All Deauth") deauth(1); //if(!deauth_break_flag) 에러시 추가
-    if (at_names[state] == "Becaon"){
-      //selected_menu = state;
-      selected_menu = 0;
-      draw_menu(becaon_names,0);
-      selection_handdler(becaon_names,2);
-      break;
-    }
     if(at_names[state] == "Sour Apple"){
       SourApple();
       break;
@@ -796,6 +1096,7 @@ void AT_draw_func(int state){
 void setup() {
   Serial.begin(115200);
   setupButtons();
+  Wire.begin();
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 F"));
     while (true)
@@ -806,9 +1107,7 @@ void setup() {
  
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(0, 0);
-  display.println("Scaning");
   display.display();
-  Wire.begin();
   main_names = {"Attack", "Scan", "Select","Settings"};
   at_names = {"Deauth", "All Deauth","Becaon","Evil Twin","Sour Apple"};
   Serial.println("done");
@@ -830,6 +1129,45 @@ void setup() {
     DEBUG_SER_PRINT(String(scan_results[i].rssi) + "\n");
   }
   #endif
+}
+int scanNetworks() {
+
+  DEBUG_SER_PRINT("Scanning WiFi networks (5s)...\n");
+
+  scan_results.clear();
+  if (wifi_scan_networks(scanResultHandler, NULL) == RTW_SUCCESS) {
+    unsigned long start = millis();
+    const unsigned long scanTime = 5000;
+    int lastDots = -1;
+
+    while (millis() - start < scanTime) {
+      int dotCount = ((millis() - start) / 500) % 4;
+      display.clearDisplay();
+      display.drawRoundRect(0, 0, 128, 16, 4, SSD1306_WHITE);
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE);
+      display.setCursor(6, 3);
+      display.println("Nova X");
+      display.drawFastHLine(0, 17, 128, SSD1306_WHITE);
+      display.drawFastHLine(0, 55, 128, SSD1306_WHITE);
+      display.setCursor(10, 30);
+      display.print("Booting");
+      for (int i = 0; i < 4; i++) {
+        display.print(i <= dotCount ? '.' : ' ');
+      }
+    
+      display.display();
+      delay(50);
+    }
+    DEBUG_SER_PRINT(" done!\n");
+    return 0;
+  } else {
+    display.setCursor(0, 32);
+    display.println("Scan failed!");
+    display.display();
+    DEBUG_SER_PRINT(" failed!\n");
+    return 1;
+  }
 }
 
 void loop() {
