@@ -1,4 +1,5 @@
 
+![logo](img/Small.png)
 ---
 ## NEW Update 2025-05-08
 - **Added animation to the screen**
