@@ -137,7 +137,6 @@ void drawNavHints(int menuSize) {
 void drawPositionText(int selected, int menuSize, int maxVis) {
     if (menuSize > maxVis) {
         char positionText[8];
-        sprintf(positionText, "%d/%d", selected + 1, menuSize);
         display.setTextSize(1);
         display.setTextColor(WHITE);
         display.setCursor(100, 54);
@@ -198,7 +197,7 @@ void draw_menu(std::vector<String>& menu_name, int selected) {
         
         drawBorders();
         drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
-        drawPositionText(selected, menuSize, maxVis);
+        //drawPositionText(selected, menuSize, maxVis);
         renderText(menu_name, start, 3, maxVis, lineH, textHeight, menuSize, maxVis);
         
         int fy = 3;
@@ -266,20 +265,20 @@ void draw_menu(std::vector<String>& menu_name, int selected) {
         int fy = 3 - (int)(startFraction * lineH);
         drawBorders();
         drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
-        drawPositionText(selected, menuSize, maxVis);
+        //drawPositionText(selected, menuSize, maxVis);
         renderText(menu_name, renderStart, fy, maxVis + 1, lineH, textHeight, menuSize, maxVis);
         renderRoundRect(currentX, currentY, currentWidth, lineH, cornerRadius);
         drawNavHints(menuSize);
         
         display.display();
-        delay(4);
+        //delay(4);
     }
     
     display.clearDisplay();
     
     drawBorders();
     drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
-    drawPositionText(selected, menuSize, maxVis);
+    //drawPositionText(selected, menuSize, maxVis);
     renderText(menu_name, start, 3, maxVis, lineH, textHeight, menuSize, maxVis);
     
     int fy = 3;
@@ -539,8 +538,8 @@ void showPopup(String message, int duration = 1500) {
 void RuningProgressBar(){
   static unsigned long lastupdate = 0;
   static int progress = 0;
-  if(millis()  - lastupdate > 150){
-    progress += 3;
+  if(millis()  - lastupdate > 10){
+    progress += 1;
     if (progress > 100) {
       progress =0;
       display.fillRect(10, 40, 100, 10, BLACK);  
@@ -692,7 +691,7 @@ void ET_Selected() {
                 }
                 renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                 display.display();
-                delay(4);
+                //delay(4);
             }
         }
 
@@ -728,7 +727,8 @@ void Draw_Selected_Menu() {
     const int textHeight = 8;     
     const int markWidth = 3 * 6;  
     static int prev_scrollindex = -1; 
-
+    const int scrollBarW = 3;
+    int menuSize = scan_results.size();
     while (true) {
         int pageStart = (scrollindex / maxVis) * maxVis;
         int prevPageStart = prev_scrollindex == -1 ? pageStart : (prev_scrollindex / maxVis) * maxVis;
@@ -759,7 +759,7 @@ void Draw_Selected_Menu() {
         if (animate) {
             int prevY = 3 + (prev_scrollindex - prevPageStart) * lineH;
             int targetY = 3 + (scrollindex - pageStart) * lineH;
-            const int rectWidth = SCREEN_WIDTH; // 화면 전체 너비
+            const int rectWidth = SCREEN_WIDTH-25; // 화면 전체 너비
             const int rectX = 0; // 왼쪽 정렬
 
             for (int i = 1; i <= frames; i++) {
@@ -781,17 +781,17 @@ void Draw_Selected_Menu() {
                     int textY = fy + (lineH - textHeight) / 2;
                     display.setCursor(5, textY); // 왼쪽 여백 5px
                     display.print(ssid);
-                    display.setCursor(SCREEN_WIDTH - markWidth - 5, textY); // 오른쪽 여백 5px
+                    display.setCursor(SCREEN_WIDTH - markWidth - 7, textY); // 오른쪽 여백 8px
                     display.print(mark);
                 }
+                drawScrollbar(scrollindex,menuSize,maxVis,lineH,scrollBarW);
                 renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                 display.display();
-                delay(4);
             }
         }
 
         display.clearDisplay();
-        const int rectWidth = SCREEN_WIDTH; // 화면 전체 너비
+        const int rectWidth = SCREEN_WIDTH -25; // 화면 전체 너비 -25 
         const int rectX = 0; // 왼쪽 정렬
         for (int line = 0; line < maxVis; line++) {
             int idx = pageStart + line;
@@ -806,12 +806,14 @@ void Draw_Selected_Menu() {
             int textY = fy + (lineH - textHeight) / 2;
             display.setCursor(5, textY); // 왼쪽 여백 5px
             display.print(ssid);
-            display.setCursor(SCREEN_WIDTH - markWidth - 5, textY); // 오른쪽 여백 5px
+            display.setCursor(SCREEN_WIDTH - markWidth - 7, textY); // 오른쪽 여백 8px
             display.print(mark);
             if (idx == scrollindex) {
+                
                 renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
             }
         }
+        drawScrollbar(scrollindex,menuSize,maxVis,lineH,scrollBarW);
         display.display();
         
         prev_scrollindex = scrollindex;
@@ -836,6 +838,12 @@ void renderText(const std::vector<String>& settings, int start, int fy, int rend
             display.setCursor(textX, textY);
             display.print(settings[idx]);
             display.setCursor(100, textY); // 오른쪽에 숫자 출력
+            if (toggle_ok){
+              display.setTextColor(SSD1306_BLACK,SSD1306_WHITE);
+            }
+            else{
+              display.setTextColor(SSD1306_WHITE,SSD1306_BLACK);
+            }
             switch (idx) {
                 case 0:
                     display.println(frames_per_deauth);
@@ -864,7 +872,6 @@ void Draw_Settings() {
     const int cornerRadius = 5;
     const int rectX = 5; 
     const int rectWidth = 118; 
-
     while (true) {
         if (ButtonPress(btnBack)) {
             selected_menu = 0; 
@@ -905,7 +912,7 @@ void Draw_Settings() {
                         renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
                         renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                         display.display();
-                        delay(4); // 프레임 간 지연
+                        //delay(4); // 프레임 간 지연
                     }
                 }
             }
@@ -943,7 +950,7 @@ void Draw_Settings() {
                         renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
                         renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                         display.display();
-                        delay(4); // 프레임 간 지연
+                        //delay(4); // 프레임 간 지연
                     }
                 }
             }
@@ -977,7 +984,7 @@ void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_sta
               draw_menu(menu_name_handle, selected_menu);  // MUST NEED IT
               break;
             case 1:
-              if (scanNetworks() != 0) {
+              if (scanNetworks("Scanning") != 0) {
                 while(true) delay(1000);
               }
               selected_menu = 0;
@@ -1113,7 +1120,7 @@ void setup() {
   Serial.println("done");
   DEBUG_SER_INIT();
   WiFi.apbegin(ssid, pass, (char *) String(current_channel).c_str());
-  if (scanNetworks() != 0) {
+  if (scanNetworks("Booting") != 0) {
     while(true) delay(1000);
   }
   SendToEsp("BW16");
@@ -1130,7 +1137,7 @@ void setup() {
   }
   #endif
 }
-int scanNetworks() {
+int scanNetworks(String text) {
 
   DEBUG_SER_PRINT("Scanning WiFi networks (5s)...\n");
 
@@ -1151,7 +1158,7 @@ int scanNetworks() {
       display.drawFastHLine(0, 17, 128, SSD1306_WHITE);
       display.drawFastHLine(0, 55, 128, SSD1306_WHITE);
       display.setCursor(10, 30);
-      display.print("Booting");
+      display.print(text);
       for (int i = 0; i < 4; i++) {
         display.print(i <= dotCount ? '.' : ' ');
       }
