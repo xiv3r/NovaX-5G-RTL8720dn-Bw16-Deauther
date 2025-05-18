@@ -271,7 +271,7 @@ void draw_menu(std::vector<String>& menu_name, int selected) {
         drawNavHints(menuSize);
         
         display.display();
-        //delay(4);
+        delay(4);
     }
     
     display.clearDisplay();
@@ -691,7 +691,7 @@ void ET_Selected() {
                 }
                 renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                 display.display();
-                //delay(4);
+                delay(4);
             }
         }
 
@@ -912,7 +912,7 @@ void Draw_Settings() {
                         renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
                         renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                         display.display();
-                        //delay(4); // 프레임 간 지연
+                        delay(4); // 프레임 간 지연
                     }
                 }
             }
@@ -950,7 +950,7 @@ void Draw_Settings() {
                         renderText(Settings, 0, 3, Settings.size(), lineH, textHeight, selected_settings);
                         renderRoundRect(rectX, currentY, rectWidth, lineH, cornerRadius);
                         display.display();
-                        //delay(4); // 프레임 간 지연
+                        delay(4); // 프레임 간 지연
                     }
                 }
             }
