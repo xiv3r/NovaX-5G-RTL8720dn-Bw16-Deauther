@@ -538,7 +538,7 @@ void showPopup(String message, int duration = 1500) {
 void RuningProgressBar(){
   static unsigned long lastupdate = 0;
   static int progress = 0;
-  if(millis()  - lastupdate > 10){
+  if(millis()  - lastupdate > 150){
     progress += 1;
     if (progress > 100) {
       progress =0;
