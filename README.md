@@ -6,6 +6,7 @@
 - **add Association Flood**
 - **add Authentication Flood**
 - **fix reversed up/down buttons**
+- **add logo**
 ---
 > The Association Flood attack only works on 2.4GHz.
 
