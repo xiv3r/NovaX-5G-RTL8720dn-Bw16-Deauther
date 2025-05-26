@@ -7,7 +7,8 @@
 - **add Authentication Flood**
 - **fix reversed up/down buttons**
 ---
-> The Association Flood attack only works on 2.4GHz
+> The Association Flood attack only works on 2.4GHz.
+
 > Next Update is Web UI
 ---
 ## Firmware Upload Guide
