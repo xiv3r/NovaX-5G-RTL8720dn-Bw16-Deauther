@@ -97,3 +97,30 @@ void wifi_tx_beacon_frame_Privacy_RSN_IE(void* src_mac, void* dst_mac, const cha
 
     wifi_tx_raw_frame(beacon_buffer, offset);
 }
+
+void wifi_tx_auth_frame(void* src_mac, void* dst_mac, uint16_t seq) {
+    AuthFrame frame;
+    memcpy(&frame.source, src_mac, 6);
+    memcpy(&frame.access_point, dst_mac, 6);
+    memcpy(&frame.destination, dst_mac, 6);
+    frame.sequence_number = seq;
+    
+    wifi_tx_raw_frame(&frame, sizeof(AuthFrame));
+}
+
+void wifi_tx_assoc_frame(void* src_mac, void* dst_mac, const char *ssid, uint16_t seq) {
+    AssocFrame frame;
+    memcpy(&frame.source, src_mac, 6);
+    memcpy(&frame.access_point, dst_mac, 6);
+    memcpy(&frame.destination, dst_mac, 6);
+    frame.sequence_number = seq;
+    
+    frame.ssid_length = 0;
+    for (int i = 0; ssid[i] != '\0' && i < 32; i++) {
+        frame.ssid[i] = ssid[i];
+        frame.ssid_length++;
+    }
+    
+    size_t frame_size = 24 + 4 + 2 + frame.ssid_length + 2 + 1;
+    wifi_tx_raw_frame(&frame, frame_size);
+}
