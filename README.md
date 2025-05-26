@@ -5,6 +5,7 @@
 ## NEW Update 2025-05-26
 - **add Association Flood**
 - **add Authentication Flood**
+- **fix reversed up/down buttons**
 ---
 > The Association Flood attack only works on 2.4GHz
 ---
