@@ -55,8 +55,8 @@ struct Button {
   Button(uint8_t p)
     : pin(p), lastDebounceTime(0), state(HIGH), lastState(HIGH) {}
 };
-#define BTN_DOWN PA12
-#define BTN_UP PA27
+#define BTN_DOWN PA27
+#define BTN_UP PA12
 #define BTN_OK PA13
 #define BTN_BACK PB3
 
