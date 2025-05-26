@@ -52,7 +52,7 @@
 - **SSD1306 Display**
 - **4 Buttons**
 - **BW16 Board**
-- **ESP32 Board**
+- **ESP32 Board** (optional)
 ---
 
 ## Connections
