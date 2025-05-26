@@ -1,21 +1,12 @@
 
 ![logo](img/Small.png)
----
-## NEW Update 2025-05-08
-- **Added animation to the screen**
----
 
 ---
-## NEW Update 2025-05-02
-- **add Evil Twin**
-- **add Sour Apple** [source](https://github.com/ckcr4lyf/EvilAppleJuice-ESP32/blob/master/src/EvilAppleJuice-ESP32-INO/EvilAppleJuice-ESP32-INO.ino)
-- **Fix Some Problems**
-- **Changed UI**
-- **Improved Beacon Attack Functions**
-- **Improved Deauth Attack Functions**
+## NEW Update 2025-05-26
+- **add Association Flood**
+- **add Authentication Flood**
 ---
-> Currently, the Evil Twin feature is only capable of stealing the password of the target Wi-Fi,  
-> but in the future, functionalities such as Google login forms will be added.
+> The Association Flood attack only works on 2.4GHz
 ---
 ## Firmware Upload Guide
 
