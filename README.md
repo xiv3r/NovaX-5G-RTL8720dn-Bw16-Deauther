@@ -4,15 +4,17 @@
 
 ---
 
-## 🚀 NEW Update – 2025-05-26
+## 🚀 NEW Update – 2025-06-01
 
-- ✅ **Added Association Flood**
-- ✅ **Added Authentication Flood**
-- ✅ **Fixed reversed Up/Down buttons**
-- ✅ **Added project logo**
+- ✅ **Split the code into header files**
+- ✅ **Add Web UI Function**
 
-> ⚠️ *Note:* Association Flood attack works only on **2.4GHz** networks.  
-> 🔜 *Next update will include a **Web UI***.
+> ⚠️ *Note:* I tried to enable both Display functionality and WebUI functionality simultaneously using xTask functions, but due to multiple overlapping issues, I had to make it so only one feature can be used at a time. I'm still working on making both features usable simultaneously, so please don't be too disappointed.
+To use the Web UI feature, press the Back button from the main menu (the first menu after booting). Also, the slow screen startup is due to the Web UI functionality.
+
+> SSID: RTL8720dn-deauther
+
+> Password: 0123456789
 
 ---
 
