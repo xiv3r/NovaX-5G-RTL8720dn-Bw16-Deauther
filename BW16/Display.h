@@ -1111,4 +1111,5 @@ void webUI(){
 }
 void display_update(){
   selection_handdler(main_names, 0);
+  webUI();
 }
