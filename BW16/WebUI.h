@@ -130,8 +130,11 @@ String makeResponse(int code, String content_type) {
 }
 
 String makeRedirect(String url) {
-  String response = "HTTP/1.1 307 Temporary Redirect\n";
-  response += "Location: " + url;
+  String response = "HTTP/1.1 302 Found\r\n";
+  response += "Location: " + url + "\r\n";
+  response += "Connection: close\r\n";
+  response += "Content-Length: 0\r\n";
+  response += "\r\n";
   return response;
 }
 
