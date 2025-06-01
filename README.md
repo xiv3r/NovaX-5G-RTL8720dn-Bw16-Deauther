@@ -9,13 +9,21 @@
 - ✅ **Split the code into header files**
 - ✅ **Add Web UI Function**
 
-> ⚠️ *Note:* I tried to enable both Display functionality and WebUI functionality simultaneously using xTask functions, but due to multiple overlapping issues, I had to make it so only one feature can be used at a time. I'm still working on making both features usable simultaneously, so please don't be too disappointed.
-To use the Web UI feature, press the Back button from the main menu (the first menu after booting). Also, the slow screen startup is due to the Web UI functionality.
+>⚠ Note: I tried to enable both Display functionality and WebUI functionality simultaneously using xTask functions, 
+> but due to multiple overlapping issues, I had to make it so only one feature can be used at a time. 
+> I'm still working on making both features usable simultaneously, so please don't be too disappointed.
+> To use the Web UI feature, press the Back button from the main menu (the first menu after booting). 
+> Also, the slow screen startup is due to the Web UI functionality.(you need to update to board manager version 3.1.8)
+
+> This version doesn't support ESP32 functions (Evil Twin, Sour Apple).
+> This is due to an issue with board manager version 3.1.8.
+> To use the Web UI feature, press the Back button from the main menu (the first menu after booting). Also, the slow screen startup is due to the Web UI functionality.
 
 > SSID: RTL8720dn-deauther
 
 > Password: 0123456789
 
+> This version doesn't support ESP32 functions
 ---
 
 ## 🛠 Firmware Upload Guide
@@ -36,8 +44,8 @@ To use the Web UI feature, press the Back button from the main menu (the first m
 2. Go to **File > Preferences**.
 3. Add the following URL to the **Additional Boards Manager URLs**: `https://github.com/ambiot/ambd_arduino/raw/master/Arduino_package/package_realtek_amebad_index.json`
 4. Open **Boards Manager**, search for **BW16**.
-5. Install **Realtek Ameba Boards** (version **3.1.5**).
-
+5. Install **Realtek Ameba Boards** (version **3.1.8**).
+> You need to update Reallteck Ameba Boards Manager
 ---
 
 ### 🔹 ESP32 Arduino Setup
