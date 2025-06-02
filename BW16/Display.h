@@ -64,18 +64,6 @@ void drawNavHints(int menuSize) {
         display.fillTriangle(10, 63, 6, 59, 14, 59, WHITE); // down
     }
 }
-int scanNetworks2() {
-  DEBUG_SER_PRINT("Scanning WiFi networks (5s)...");
-  scan_results.clear();
-  if (wifi_scan_networks(scanResultHandler, NULL) == RTW_SUCCESS) {
-    delay(5000);
-    DEBUG_SER_PRINT(" done!\n");
-    return 0;
-  } else {
-    DEBUG_SER_PRINT(" failed!\n");
-    return 1;
-  }
-}
 int scanNetworks(String text) {
 
   DEBUG_SER_PRINT("Scanning WiFi networks (5s)...\n");
@@ -115,17 +103,8 @@ int scanNetworks(String text) {
     return 1;
   }
 }
-void drawPositionText(int selected, int menuSize, int maxVis) {
-    if (menuSize > maxVis) {
-        char positionText[8];
-        display.setTextSize(1);
-        display.setTextColor(WHITE);
-        display.setCursor(100, 54);
-        display.print(positionText);
-    }
-}
 
-
+//매뉴 값 렌더링
 void renderText(const std::vector<String>& menu_name, int start, int fy, int renderCount, int lineH, int textHeight, int menuSize, int maxVis) {
     for (int idx = start; idx < menu_name.size() && idx < start + renderCount; idx++) {
         if (fy >= -lineH && fy < 64) { // 화면 내에서만 렌더링
@@ -151,136 +130,141 @@ void renderRoundRect(int rectX, int rectY, int rectWidth, int lineH, int cornerR
     display.drawRoundRect(rectX, rectY, rectWidth, lineH, cornerRadius, WHITE);
     display.drawRoundRect(rectX + 1, rectY + 1, rectWidth - 2, lineH - 2, cornerRadius - 1, WHITE);
 }
-
 void draw_menu(std::vector<String>& menu_name, int selected) {
     static int prev_selected = -1;
-    const int lineH = 15;
-    const int maxVis = 4;
+    const int lineHeight = 15;
+    const int maxVisibleItems = 4;
     const int cornerRadius = 5;
-    const int scrollBarW = 3;
-    const int frames = 12;
-    const float step = 1.0 / frames;
+    const int scrollBarWidth = 3;
+    const int animationFrames = 12;
+    const float animationStep = 1.0f / animationFrames;
     const int textHeight = 8;
-    const int menuSize = menu_name.size();
-  
-    if (prev_selected == -1 || prev_selected == selected) {
-        prev_selected = selected;
-        
+    const int charWidth = 6;
+    const int minRectWidth = 40;
+    const int baseX = 5;
+    const int textOffsetY = 3;
+    const int maxWidthWithScrollbar = 110;
+    const int maxWidthNoScrollbar = 118;
+
+    int menuSize = menu_name.size();
+
+    auto calcStartIndex = [&](int sel) -> int {
+        if (menuSize > maxVisibleItems && sel >= maxVisibleItems - 1) {
+            int s = sel - (maxVisibleItems - 1);
+            return (s + maxVisibleItems > menuSize) ? menuSize - maxVisibleItems : s;
+        }
+        return 0;
+    };
+
+    auto calcRectWidth = [&](int textLen) -> int {
+        int w = textLen * charWidth + 10;
+        int maxW = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
+        if (w < minRectWidth) w = minRectWidth;
+        if (w > maxW) w = maxW;
+        return w;
+    };
+
+    auto drawFullFrame = [&](int startIndex, int selectorY, int selectorW, int selectorX) {
         display.clearDisplay();
-        
-        int start = 0;
-        if (menuSize > maxVis && selected >= maxVis - 1) {
-            start = selected - (maxVis - 1);
-            if (start + maxVis > menuSize) {
-                start = menuSize - maxVis;
-            }
-        }
-        
         drawBorders();
-        drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
-        //drawPositionText(selected, menuSize, maxVis);
-        renderText(menu_name, start, 3, maxVis, lineH, textHeight, menuSize, maxVis);
-        
-        int fy = 3;
-        for (int idx = start; idx < menuSize && idx < start + maxVis; idx++) {
-            if (idx == selected) {
-                int textWidth = menu_name[selected].length() * 6;
-                int rectWidth = textWidth + 10;
-                int maxWidth = (menuSize > maxVis) ? 110 : 118;
-                if (rectWidth < 40) rectWidth = 40;
-                if (rectWidth > maxWidth) rectWidth = maxWidth;
-                int rectX = (maxWidth - rectWidth) / 2 + 5;
-                renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
-            }
-            fy += lineH;
-        }
-        
+        drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
+        renderText(menu_name, startIndex, textOffsetY, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
+        renderRoundRect(selectorX, selectorY, selectorW, lineHeight, cornerRadius);
         drawNavHints(menuSize);
         display.display();
+    };
+
+    // 첫진입 이거나 이전 매뉴에서 다르지 않을 떄
+    if (prev_selected == -1 || prev_selected == selected) {
+        int startIndex = calcStartIndex(selected);
+        int fy = textOffsetY;
+
+        display.clearDisplay();
+        drawBorders();
+        drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
+        renderText(menu_name, startIndex, fy, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
+
+        // 선택 강조
+        for (int i = 0; i < maxVisibleItems && (startIndex + i) < menuSize; ++i) {
+            if ((startIndex + i) == selected) {
+                int textLen = menu_name[selected].length();
+                int rectW = calcRectWidth(textLen);
+                int maxW = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
+                int rectX = (maxW - rectW) / 2 + baseX;
+                renderRoundRect(rectX, fy, rectW, lineHeight, cornerRadius);
+            }
+            fy += lineHeight;
+        }
+
+        drawNavHints(menuSize);
+        display.display();
+
+        prev_selected = selected;
         return;
     }
-    
-    // 이전 및 현재 선택 항목의 시작점 계산
-    int prev_start = 0;
-    if (menuSize > maxVis && prev_selected >= maxVis - 1) {
-        prev_start = prev_selected - (maxVis - 1);
-        if (prev_start + maxVis > menuSize) {
-            prev_start = menuSize - maxVis;
-        }
-    }
-    
-    int start = 0;
-    if (menuSize > maxVis && selected >= maxVis - 1) {
-        start = selected - (maxVis - 1);
-        if (start + maxVis > menuSize) {
-            start = menuSize - maxVis;
-        }
-    }
-    
-    int prevY = 3 + (prev_selected - prev_start) * lineH;
-    int targetY = 3 + (selected - start) * lineH;
-    int prevTextWidth = menu_name[prev_selected].length() * 6;
-    int prevRectWidth = prevTextWidth + 10;
-    int maxWidth = (menuSize > maxVis) ? 110 : 118;
-    if (prevRectWidth < 40) prevRectWidth = 40;
-    if (prevRectWidth > maxWidth) prevRectWidth = maxWidth;
-    
-    int targetTextWidth = menu_name[selected].length() * 6;
-    int targetRectWidth = targetTextWidth + 10;
-    if (targetRectWidth < 40) targetRectWidth = 40;
-    if (targetRectWidth > maxWidth) targetRectWidth = maxWidth;
-    for (int i = 1; i <= frames; i++) {
-        float t = i * step;
-        float easedT = 1.0 - (1.0 - t) * (1.0 - t);
-        int currentY = prevY + (targetY - prevY) * easedT;
-        int currentWidth = prevRectWidth + (targetRectWidth - prevRectWidth) * easedT;
-        int currentX = (maxWidth - currentWidth) / 2 + 5;
-        
 
-        float currentStart = prev_start + (start - prev_start) * easedT;
-        int renderStart = (int)currentStart;
-        float startFraction = currentStart - renderStart;
-        
+    // 이전 항목에서 현재 항목으로
+    int prevStart = calcStartIndex(prev_selected);
+    int newStart = calcStartIndex(selected);
+
+    int prevY = textOffsetY + (prev_selected - prevStart) * lineHeight;
+    int newY  = textOffsetY + (selected - newStart) * lineHeight;
+
+    int prevW = calcRectWidth(menu_name[prev_selected].length());
+    int newW  = calcRectWidth(menu_name[selected].length());
+
+    int maxW = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
+    int prevX = (maxW - prevW) / 2 + baseX;
+    int newX  = (maxW - newW) / 2 + baseX;
+
+    for (int i = 1; i <= animationFrames; ++i) {
+        float t = i * animationStep;
+        float easedT = 1.0f - (1.0f - t) * (1.0f - t);  // Ease-out
+
+        int currentY = prevY + (newY - prevY) * easedT;
+        int currentW = prevW + (newW - prevW) * easedT;
+        int currentX = prevX + (newX - prevX) * easedT;
+
+        float currentStartF = prevStart + (newStart - prevStart) * easedT;
+        int currentStart = (int)currentStartF;
+        float fractionY = currentStartF - currentStart;
+
+        int fy = textOffsetY - (int)(fractionY * lineHeight);
+
         display.clearDisplay();
-        
-        int fy = 3 - (int)(startFraction * lineH);
         drawBorders();
-        drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
-        //drawPositionText(selected, menuSize, maxVis);
-        renderText(menu_name, renderStart, fy, maxVis + 1, lineH, textHeight, menuSize, maxVis);
-        renderRoundRect(currentX, currentY, currentWidth, lineH, cornerRadius);
+        drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
+        renderText(menu_name, currentStart, fy, maxVisibleItems + 1, lineHeight, textHeight, menuSize, maxVisibleItems);
+        renderRoundRect(currentX, currentY, currentW, lineHeight, cornerRadius);
         drawNavHints(menuSize);
-        
         display.display();
         delay(4);
     }
-    
+
+    // Final Frame Draww
+    int startIndex = calcStartIndex(selected);
+    int fy = textOffsetY;
+
     display.clearDisplay();
-    
     drawBorders();
-    drawScrollbar(selected, menuSize, maxVis, lineH, scrollBarW);
-    //drawPositionText(selected, menuSize, maxVis);
-    renderText(menu_name, start, 3, maxVis, lineH, textHeight, menuSize, maxVis);
-    
-    int fy = 3;
-    for (int idx = start; idx < menuSize && idx < start + maxVis; idx++) {
-        if (idx == selected) {
-            int textWidth = menu_name[selected].length() * 6;
-            int rectWidth = textWidth + 10;
-            int maxWidth = (menuSize > maxVis) ? 110 : 118;
-            if (rectWidth < 40) rectWidth = 40;
-            if (rectWidth > maxWidth) rectWidth = maxWidth;
-            int rectX = (maxWidth - rectWidth) / 2 + 5;
-            renderRoundRect(rectX, fy, rectWidth, lineH, cornerRadius);
+    drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
+    renderText(menu_name, startIndex, fy, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
+
+    for (int i = 0; i < maxVisibleItems && (startIndex + i) < menuSize; ++i) {
+        if ((startIndex + i) == selected) {
+            int rectW = calcRectWidth(menu_name[selected].length());
+            int rectX = (maxW - rectW) / 2 + baseX;
+            renderRoundRect(rectX, fy, rectW, lineHeight, cornerRadius);
         }
-        fy += lineH;
+        fy += lineHeight;
     }
-    
+
     drawNavHints(menuSize);
     display.display();
-    
+
     prev_selected = selected;
 }
+
 bool contains(std::vector<int>& vec, int value) {
   for (int v : vec) {
     if (v == value) {
@@ -641,6 +625,7 @@ void ET_Selected() {
         prev_scrollindex2 = scrollindex2;
     }
 }
+//세팅 값 렌더링
 void renderText(const std::vector<String>& settings, int start, int fy, int renderCount, int lineH, int textHeight, int selected) {
     for (int idx = start; idx < settings.size() && idx < start + renderCount; idx++) {
         if (fy >= -lineH && fy < 64) { // 화면 내에서만 렌더링
