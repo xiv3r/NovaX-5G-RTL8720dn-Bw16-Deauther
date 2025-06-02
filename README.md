@@ -4,11 +4,13 @@
 
 ---
 
-## 🚀 NEW Update – 2025-06-01
+## 🚀 NEW Update – 2025-06-01 + 2025-06-02
 
 - ✅ **Split the code into header files**
 - ✅ **Add Web UI Function**
-
+- ✅ **Add Association Flood (Web UI)**
+- ✅ **Add Authentication Flood (Web UI)**
+- ✅ **Add SSID Cloning (Web UI)**
 >⚠ Note: I tried to enable both Display functionality and WebUI functionality simultaneously using xTask functions, 
 > but due to multiple overlapping issues, I had to make it so only one feature can be used at a time. 
 > I'm still working on making both features usable simultaneously, so please don't be too disappointed.
