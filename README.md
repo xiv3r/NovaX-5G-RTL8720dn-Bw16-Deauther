@@ -147,4 +147,12 @@ The author holds **no responsibility** for any consequences resulting from the u
 If you find any **issues** or have **suggestions**, feel free to reach out via **Discord**:  
 `warwick.320`
 
+## Star History
 
+<a href="https://www.star-history.com/#warwick320/NovaX-5G-RTL8720dn-Bw16-Deauther&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=warwick320/NovaX-5G-RTL8720dn-Bw16-Deauther&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=warwick320/NovaX-5G-RTL8720dn-Bw16-Deauther&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=warwick320/NovaX-5G-RTL8720dn-Bw16-Deauther&type=Date" />
+ </picture>
+</a>
