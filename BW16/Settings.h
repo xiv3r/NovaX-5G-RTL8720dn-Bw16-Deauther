@@ -19,7 +19,7 @@ void bw_16_set_up(){
   display.display();
   delay(500);
   main_names = {"Attack", "Scan", "Select","Settings"};
-  at_names = {"Deauth", "All Deauth","Becaon","Authentication","Association","Evil Twin","Sour Apple"};
+  at_names = {"Deauth", "All Deauth","Beacon","Authentication","Association","Evil Twin","Sour Apple"};
   Serial.println("done");
 
   // if (scanNetworks("Booting") != 0) {
