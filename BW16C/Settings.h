@@ -14,10 +14,10 @@ void bw_16_set_up(){
   u8g2.drawXBMP(0, 0, 128, 64, LOGO);
   u8g2.sendBuffer();
   delay(1000);
-  main_names = {"攻击模式", "扫描网络", "目标选择","系统设置"};
-  at_names = {"断开连接攻击", "全网断开攻击","信标洪水攻击","认证洪水攻击","关联洪水攻击"};
+  main_names = {"攻击模式", "扫描网络", "选择目标","设置"};
+  at_names = {"认证攻击", "全网断开攻击","信标帧","洪水攻击","关联洪水"};
   Settings = {"每次断网数量","每次信标数量","克隆设备上限 ","广播上限"};
-  becaon_names = {"垃圾广播","设备克隆"};
+  becaon_names = {"垃圾广播","克隆"};
   Serial.println("display_set_up done");
   draw_menu(main_names, 0);
 }
