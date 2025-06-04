@@ -312,7 +312,7 @@ void becaon(int state) {
   u8g2.clearBuffer();
   uint8_t fh = u8g2.getMaxCharHeight(); 
   u8g2.drawRFrame(0, 0, 128, 16, 4);
-  u8g2.drawUTF8(6, 3 + fh, "状态");
+  u8g2.drawUTF8(6, fh, "状态");
   u8g2.drawHLine(0, 17, 128);
   u8g2.drawUTF8(4, 22 + fh, becaon_names[state].c_str());
   const int cx = 110, cy = 26, r = 5;
@@ -827,7 +827,7 @@ void AT_draw_func(int state) {
     }
     u8g2.clearBuffer();
     u8g2.drawRFrame(0, 0, 128, 16, 4);
-    u8g2.drawUTF8(6, 3 + fh, "状态");
+    u8g2.drawUTF8(6, fh, "状态");
     u8g2.drawHLine(0, 17, 128);
     u8g2.drawUTF8(4, 22 + fh, at_names[state].c_str());
     const int cx = 110, cy = 26, r = 5;
