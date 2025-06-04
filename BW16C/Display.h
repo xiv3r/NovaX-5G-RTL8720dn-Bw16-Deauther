@@ -1,5 +1,6 @@
 #include "LOGUARTClass.h"
 #include <Wire.h>
+#include <SPI.h>
 #include <U8g2lib.h>
 #include "LOGO.h"
 //#include "ESP.h"
@@ -311,9 +312,9 @@ void becaon(int state) {
   u8g2.clearBuffer();
   uint8_t fh = u8g2.getMaxCharHeight(); 
   u8g2.drawRFrame(0, 0, 128, 16, 4);
-  u8g2.drawStr(6, 3 + fh, "STATE");
+  u8g2.drawUTF8(6, 3 + fh, "状态");
   u8g2.drawHLine(0, 17, 128);
-  u8g2.drawStr(4, 22 + fh, becaon_names[state].c_str());
+  u8g2.drawUTF8(4, 22 + fh, becaon_names[state].c_str());
   const int cx = 110, cy = 26, r = 5;
   u8g2.drawDisc(cx, cy, r);
   u8g2.drawCircle(cx, cy, r);
@@ -818,7 +819,7 @@ void AT_draw_func(int state) {
       draw_menu(at_names, state);
       break;
     }
-    if (at_names[state] == "Becaon") {
+    if (at_names[state] == "信标帧") {
       selected_menu = 0;
       draw_menu(becaon_names, 0);
       selection_handdler(becaon_names, 2);
@@ -826,9 +827,9 @@ void AT_draw_func(int state) {
     }
     u8g2.clearBuffer();
     u8g2.drawRFrame(0, 0, 128, 16, 4);
-    u8g2.drawStr(6, 3 + fh, "STATE");
+    u8g2.drawUTF8(6, 3 + fh, "状态");
     u8g2.drawHLine(0, 17, 128);
-    u8g2.drawStr(4, 22 + fh, at_names[state].c_str());
+    u8g2.drawUTF8(4, 22 + fh, at_names[state].c_str());
     const int cx = 110, cy = 26, r = 5;
     u8g2.drawDisc(cx, cy, r);
     u8g2.drawCircle(cx, cy, r);
@@ -838,17 +839,14 @@ void AT_draw_func(int state) {
       SelectedItem.push_back(0);
     }
 
-    if (at_names[state]== "Deauth") {
+    if (at_names[state]== "认证攻击") {
       deauth(0);
-    } else if (at_names[state] == "All Deauth") {
+    } else if (at_names[state] == "全网断开攻击") {
       deauth(1);
-    } else if (at_names[state] ==  "Sour Apple") {
-      SourApple();
-      break;
-    } else if (at_names[state] == "Association") {
+    } else if (at_names[state] == "关联洪水") {
       auth_assoc(0);
       break;
-    } else if (at_names[state] == "Authentication") {
+    } else if (at_names[state] == "洪水攻击") {
       auth_assoc(1);
       break;
     }
