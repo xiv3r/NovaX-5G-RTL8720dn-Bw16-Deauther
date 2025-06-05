@@ -16,7 +16,7 @@ void bw_16_set_up(){
   delay(1000);
   main_names = {"攻击模式", "扫描网络", "选择目标","设置"};
   at_names = {"认证攻击", "全网断开攻击","信标帧","洪水攻击","关联洪水"};
-  Settings = {"每次断网数量","每次信标数量","克隆设备上限 ","广播上限"};
+  Settings = {"认证帧/次","信标帧/次","Max克隆数 ","Max干扰数"};
   becaon_names = {"垃圾广播","克隆"};
   Serial.println("display_set_up done");
   draw_menu(main_names, 0);
