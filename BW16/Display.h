@@ -1,7 +1,7 @@
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
+#include <cmath>
 #include "LOGO.h"
 //#include "ESP.h"
 #include "WebUI.h"
@@ -132,30 +132,26 @@ void renderRoundRect(int rectX, int rectY, int rectWidth, int lineH, int cornerR
 }
 void draw_menu(std::vector<String>& menu_name, int selected) {
     static int prev_selected = -1;
-    const int lineHeight = 15;
-    const int maxVisibleItems = 4;
-    const int cornerRadius = 5;
-    const int scrollBarWidth = 3;
-    const int animationFrames = 12;
-    const float animationStep = 1.0f / animationFrames;
-    const int textHeight = 8;
-    const int charWidth = 6;
-    const int minRectWidth = 40;
-    const int baseX = 5;
-    const int textOffsetY = 3;
+    const int lineHeight            = 15;
+    const int maxVisibleItems      = 4;
+    const int cornerRadius         = 5;
+    const int scrollBarWidth       = 3;
+    const int textHeight           = 8;
+    const int charWidth            = 6;
+    const int minRectWidth         = 40;
+    const int baseX                = 5;
+    const int textOffsetY          = 3;
     const int maxWidthWithScrollbar = 110;
-    const int maxWidthNoScrollbar = 118;
-
+    const int maxWidthNoScrollbar  = 118;
+    const unsigned long animDuration = 300UL;
     int menuSize = menu_name.size();
-
     auto calcStartIndex = [&](int sel) -> int {
         if (menuSize > maxVisibleItems && sel >= maxVisibleItems - 1) {
             int s = sel - (maxVisibleItems - 1);
-            return (s + maxVisibleItems > menuSize) ? menuSize - maxVisibleItems : s;
+            return (s + maxVisibleItems > menuSize) ? (menuSize - maxVisibleItems) : s;
         }
         return 0;
     };
-
     auto calcRectWidth = [&](int textLen) -> int {
         int w = textLen * charWidth + 10;
         int maxW = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
@@ -164,32 +160,18 @@ void draw_menu(std::vector<String>& menu_name, int selected) {
         return w;
     };
 
-    auto drawFullFrame = [&](int startIndex, int selectorY, int selectorW, int selectorX) {
-        display.clearDisplay();
-        drawBorders();
-        drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
-        renderText(menu_name, startIndex, textOffsetY, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
-        renderRoundRect(selectorX, selectorY, selectorW, lineHeight, cornerRadius);
-        drawNavHints(menuSize);
-        display.display();
-    };
-
-    // 첫진입 이거나 이전 매뉴에서 다르지 않을 떄
     if (prev_selected == -1 || prev_selected == selected) {
         int startIndex = calcStartIndex(selected);
         int fy = textOffsetY;
-
         display.clearDisplay();
         drawBorders();
         drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
         renderText(menu_name, startIndex, fy, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
-
-        // 선택 강조
         for (int i = 0; i < maxVisibleItems && (startIndex + i) < menuSize; ++i) {
             if ((startIndex + i) == selected) {
                 int textLen = menu_name[selected].length();
                 int rectW = calcRectWidth(textLen);
-                int maxW = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
+                int maxW  = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
                 int rectX = (maxW - rectW) / 2 + baseX;
                 renderRoundRect(rectX, fy, rectW, lineHeight, cornerRadius);
             }
@@ -198,73 +180,79 @@ void draw_menu(std::vector<String>& menu_name, int selected) {
 
         drawNavHints(menuSize);
         display.display();
-
         prev_selected = selected;
         return;
     }
-
-    // 이전 항목에서 현재 항목으로
     int prevStart = calcStartIndex(prev_selected);
-    int newStart = calcStartIndex(selected);
-
+    int newStart  = calcStartIndex(selected);
     int prevY = textOffsetY + (prev_selected - prevStart) * lineHeight;
-    int newY  = textOffsetY + (selected - newStart) * lineHeight;
-
+    int newY  = textOffsetY + (selected      - newStart)  * lineHeight;
     int prevW = calcRectWidth(menu_name[prev_selected].length());
     int newW  = calcRectWidth(menu_name[selected].length());
-
     int maxW = (menuSize > maxVisibleItems) ? maxWidthWithScrollbar : maxWidthNoScrollbar;
     int prevX = (maxW - prevW) / 2 + baseX;
-    int newX  = (maxW - newW) / 2 + baseX;
+    int newX  = (maxW - newW)  / 2 + baseX;
 
-    for (int i = 1; i <= animationFrames; ++i) {
-        float t = i * animationStep;
-        float easedT = 1.0f - (1.0f - t) * (1.0f - t);  // Ease-out
+    //time based
+    unsigned long startTime = millis();
+    unsigned long endTime   = startTime + animDuration;
+    float deltaY = float(newY - prevY);
+    float deltaX = float(newX - prevX);
+    float deltaW = float(newW - prevW);
 
-        int currentY = prevY + (newY - prevY) * easedT;
-        int currentW = prevW + (newW - prevW) * easedT;
-        int currentX = prevX + (newX - prevX) * easedT;
+    bool done = false;
+    while (!done) {
+        unsigned long now = millis();
+        if (now >= endTime) {
+            now = endTime;
+            done = true;
+        }
+        float t = float(now - startTime) / float(animDuration);
+        if (t < 0.0f) t = 0.0f;
+        if (t > 1.0f) t = 1.0f;
+        float easedT = t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2; // easeing in out c
+        float currentYf = float(prevY) + deltaY * easedT;
+        float currentXf = float(prevX) + deltaX * easedT;
+        float currentWf = float(prevW) + deltaW * easedT;
+        int currentY = (int)roundf(currentYf);
+        int currentX = (int)roundf(currentXf);
+        int currentW = (int)roundf(currentWf);
 
-        float currentStartF = prevStart + (newStart - prevStart) * easedT;
-        int currentStart = (int)currentStartF;
-        float fractionY = currentStartF - currentStart;
-
-        int fy = textOffsetY - (int)(fractionY * lineHeight);
-
+        float currentStartF = float(prevStart) + float(newStart - prevStart) * easedT;
+        int baseIndex = (int)floorf(currentStartF);
+        float fractionY = currentStartF - float(baseIndex);
+        int textOffsetPixel = (int)roundf(fractionY * lineHeight);
+        int fy = textOffsetY - textOffsetPixel;
         display.clearDisplay();
         drawBorders();
         drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
-        renderText(menu_name, currentStart, fy, maxVisibleItems + 1, lineHeight, textHeight, menuSize, maxVisibleItems);
+
+        renderText(menu_name, baseIndex, fy, maxVisibleItems + 1, lineHeight, textHeight, menuSize, maxVisibleItems);
+
         renderRoundRect(currentX, currentY, currentW, lineHeight, cornerRadius);
         drawNavHints(menuSize);
         display.display();
-        delay(4);
+
     }
 
-    // Final Frame Draww
-    int startIndex = calcStartIndex(selected);
-    int fy = textOffsetY;
+    int finalStart = newStart;
+    int fy_final = textOffsetY;
 
     display.clearDisplay();
     drawBorders();
     drawScrollbar(selected, menuSize, maxVisibleItems, lineHeight, scrollBarWidth);
-    renderText(menu_name, startIndex, fy, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
+    renderText(menu_name, finalStart, fy_final, maxVisibleItems, lineHeight, textHeight, menuSize, maxVisibleItems);
 
-    for (int i = 0; i < maxVisibleItems && (startIndex + i) < menuSize; ++i) {
-        if ((startIndex + i) == selected) {
-            int rectW = calcRectWidth(menu_name[selected].length());
-            int rectX = (maxW - rectW) / 2 + baseX;
-            renderRoundRect(rectX, fy, rectW, lineHeight, cornerRadius);
-        }
-        fy += lineHeight;
-    }
+    int finalX = newX;
+    int finalY = newY;
+    int finalW = newW;
+    renderRoundRect(finalX, finalY, finalW, lineHeight, cornerRadius);
 
     drawNavHints(menuSize);
     display.display();
 
     prev_selected = selected;
 }
-
 bool contains(std::vector<int>& vec, int value) {
   for (int v : vec) {
     if (v == value) {
