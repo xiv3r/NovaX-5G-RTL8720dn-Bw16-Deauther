@@ -1,9 +1,8 @@
 
 ![logo](img/LOGO_ONLY_SMALL.png)
-# [Chinese](/README_CHINA.md)
 # [Project Webpage — Check it out!](https://warwick320.github.io/NovaX-5G-RTL8720dn-Bw16-Deauther/)
 ## ⭐ If you like this project, please give it a star!
-
+# [Chinese](/README_CHINA.md)
 ---
 
 ## 🚀 NEW Update – 2025-06-07
