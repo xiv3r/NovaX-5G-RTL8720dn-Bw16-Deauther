@@ -26,7 +26,7 @@ void bw_16_set_up(){
   setupButtons();
   //Wire.begin(); 버그 있음 3.1.8버전
   main_names = {"Attack", "Scan", "Select","Settings"};
-  at_names = {"Deauth", "All Deauth","Becaon","Authentication","Association"};
+  at_names = {"Deauth", "All Deauth","Beacon","Authentication","Association"};
   Serial.println("done");
 
   // if (scanNetworks("Booting") != 0) {
