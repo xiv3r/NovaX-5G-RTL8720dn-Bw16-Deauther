@@ -1033,7 +1033,7 @@ void AT_draw_func(int state){
       Evil_Twin();
       break;
     }
-    if (at_names[state] == "Becaon"){
+    if (at_names[state] == "Beacon"){
       //selected_menu = state;
       selected_menu = 0;
       draw_menu(becaon_names,0);
