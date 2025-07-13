@@ -12,7 +12,7 @@
 
 
 ---
-
+> New Theme(terminal) is beta! now only support Deauth and All Deauth
 ## 🛠 Firmware Upload Guide
 
 ### 🔹 Uploading Firmware (Using Upload Tool)
