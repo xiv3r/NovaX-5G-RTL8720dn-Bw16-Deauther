@@ -752,9 +752,9 @@ void web_stable(){
           } else if (param.second == "Association") {
             attack_mode = ASSOC;
           } else if (param.second == "Beacon") {
-            attack_mode = BECAON; // BECAON -> BEACON 오타 수정도 여기에 반영
+            attack_mode = BECAON; 
           }
-          break; // action_type을 찾았으니 더 이상 루프를 돌 필요 없음
+          break; 
         }
       }
 
@@ -766,27 +766,7 @@ void web_stable(){
       }
       client.write(makeRedirect("/").c_str());
     }
-    // 기존 /deauth, /auten, /assoc, /beacon 경로는 이제 필요 없습니다.
-    // 이 부분은 삭제하거나 주석 처리하세요.
-    /*
-    else if (path == "/deauth") {
-      if(!isDeauthing) Serial.println("Deauth Started");
-      web_attack(DEAUTH, request, path);
-      client.write(makeRedirect("/").c_str());
-    } else if (path == "/auten") {
-      if(!isDeauthing) {
-        Serial.println("auten Started");
-      }
-      web_attack(AUTH, request, path);
-      client.write(makeRedirect("/").c_str());
-    } else if (path == "/assoc") {
-      web_attack(ASSOC, request, path);
-      client.write(makeRedirect("/").c_str());
-    } else if (path == "/beacon") {
-      web_attack(BECAON, request, path); // 이 오타도 BEACON으로 수정해야 합니다.
-      client.write(makeRedirect("/").c_str());
-    }
-    */
+
     else if (path == "/setframes") {
       std::vector<std::pair<String, String>> post_data = parsePost(request);
       for (auto &param : post_data) {
@@ -833,3 +813,4 @@ void web_stable(){
   }
   flood_web(selectedNum);
 }
+
